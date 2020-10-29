@@ -1,5 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import React, { Component, useState, useEffect } from "react";
+import * as Font from 'expo-font'
+
 
 import Screen1 from "./src/screens/drawer/Screen1";
 import Screen2 from "./src/screens/drawer/Screen2";
@@ -10,6 +12,8 @@ import OrderList from "./src/screens/drawer/OrderList";
 import RuleScreen from "./src/screens/drawer/RuleScreen";
 import CordView from "./src/screens/drawer/CordView";
 import Dropdown from "./src/Dropdown";
+import ForgotScreen from "./src/ForgotScreen";
+import RegisterScreen from "./src/RegisterScreen";
 
 // import BookScreen from './src/BookScreen'
 
@@ -25,7 +29,7 @@ import Splash from "./src/Splash";
 import LoginScreen from "./src/LoginScreen";
 import LoadingScreen from "./src/LoadingScreen";
 import OrderDetail from './src/screens/drawer/OrderDetail'
-import { Text } from "react-native";
+import { Platform, Text } from "react-native";
 import { Icon } from "react-native-elements";
 import {
 	NavigationContainer,
@@ -56,6 +60,8 @@ import { AuthContext } from "./src/AuthContext";
 import firebase from "firebase";
 // import auth from '@react-native-firebase/auth'
 import { firebaseConfig } from "./config";
+import { styles } from "./src/css/style";
+import Toast from "react-native-toast-message";
 
 if (!firebase.apps.length) {
 	firebase.initializeApp(firebaseConfig);
@@ -97,7 +103,11 @@ App = () => {
 	// 		setUser(userAuth);
 	// 	}
 	// });
+
+
+
 	useEffect(() => {
+		
 		// console.log(user);
 		// if (!user) {
 			// checkAuth()
@@ -105,6 +115,10 @@ App = () => {
 		// return checkAuth();
 		return () => user;
 	}, []);
+
+	const Test = () => {
+		return (<Toast ref={viewElement} />)
+	}
 
 	const createHomeStack = () => {
 		return (
@@ -117,13 +131,23 @@ App = () => {
 				<Stack.Screen
 					name="LoginScreen"
 					component={LoginScreen}
-					options={{ headerShown: false }}
+					options={{ headerShown: false, title: <Text style={{fontFamily:'thSarabunNew', fontSize:20}}>เข้าสู่ระบบ</Text>}}
+				/>
+				<Stack.Screen
+					name="ForgotScreen"
+					component={ForgotScreen}
+					options={{ title: <Text style={{fontFamily:'thSarabunNew', fontSize:20}}>ลืมรหัสผ่าน</Text>} }
+				/>
+				<Stack.Screen
+					name="RegisterScreen"
+					component={RegisterScreen}
+					options={{ title: <Text style={{fontFamily:'thSarabunNew', fontSize:30}}>สมัครสมาชิก</Text>}}
 				/>
 				<Stack.Screen
 					name="Feed"
 					component={createDrawer}
 					options={({ navigation, route }) => ({
-						title: "Badminton K6",
+						title: <Text style={styles.title2}>Badminton K6</Text>,
 						test: route.params.name,
 						headerLeft: () => (
 							<Icon
@@ -201,11 +225,13 @@ App = () => {
 		);
 	};
 
+
 	const DrawerContent = (props) => (
 		<DrawerContentScrollView {...props}>
-			<DrawerItemList {...props} />
+			<DrawerItemList {...props} labelStyle={{fontFamily:"thSarabunNew", fontSize:22}} />
 			<DrawerItem
 				label="ออกจากระบบ"
+				labelStyle={{fontFamily:"thSarabunNew", fontSize:22}}
 				onPress={() => {
 					firebase.auth().signOut();
 					//   props.navigation.navigate('Contacts')
@@ -236,7 +262,7 @@ App = () => {
 					initialParams={{ ...props.route.params }}
 				/>
 				<Drawer.Screen name="ตารางการใช้สนาม" component={CordView} />
-				<Drawer.Screen name="กฎเกณฑ์" component={RuleScreen} />
+				<Drawer.Screen name="กฎเกณฑ์การใช้สนาม" component={RuleScreen} />
 			</Drawer.Navigator>
 		);
 	};

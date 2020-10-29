@@ -5,13 +5,14 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import { styles } from "./css/style";
 import * as firebase from "firebase";
 import { useNavigation, useRoute } from '@react-navigation/native'
+import * as Font from "expo-font";
 
 class LoginScreen2 extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			username: "test@sk8.com",
-			password: "123456",
+			username: "",
+			password: "",
 			altUsername: 0,
 			altPassword: 0,
 			loading: false,
@@ -28,7 +29,9 @@ class LoginScreen2 extends React.Component {
 				.signInWithEmailAndPassword(username, password)
 				.then((response) => {
 					console.log(response);
-				});
+				}).catch((err) => {
+					console.log(err)
+				})
 		} catch (err) {
 			console.log(err.toString());
 		}
@@ -52,6 +55,9 @@ class LoginScreen2 extends React.Component {
 			this.checkUserPass(username, password);
 		}
 	};
+
+
+
 
 	componentDidMount() {
 		setTimeout(() => {
@@ -134,14 +140,14 @@ class LoginScreen2 extends React.Component {
 				<View style={styles.btn}>
 					<Button
 						onPress={(event) => this.changeElement(username, password)}
-						title="Log In"
+						title="เข้าสู่ระบบ"
 						buttonStyle={{ backgroundColor: "#7ad669" }}
 						accessibilityLabel="Learn more about this purple button"
 					/>
 				</View>
 				<View style={styles.signIn}>
-					<Text>Forgot Password ?</Text>
-					<Text>Sign In ?</Text>
+					<Text>ลืมรหัสผ่าน ?</Text>
+					<Text>สมัครสมาชิก</Text>
 				</View>
 			</View>
 		) : (
@@ -165,34 +171,33 @@ const Splash = () => (
 
 
 import { AuthContext } from './AuthContext'
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 
 
-LoginScreen = ({navigation}) => {
+LoginScreen = () => {
 	const { signIn } = React.useContext(AuthContext)
-	console.log(signIn)
-    // const navigation = useNavigation();
-    // const route = useRoute();
+	// console.log(signIn)
+    const navigation = useNavigation();
+    const route = useRoute();
     const [isLoading, setLoading] = useState(true);
-    const [isUsername, setUsername] = useState("test@sk8.com");
-    const [isPassword, setPassword] = useState("123456");
+    const [isUsername, setUsername] = useState("");
+    const [isPassword, setPassword] = useState("");
     const [isAltUsername, setAltUsername] = useState(0);
     const [isAltPassword, setAltPassword] = useState(0);
 
 
-
+	// const _loadingFont = async () => {
+	// 	await Font.loadAsync({
+	// 		thSarabunNew: require("../assets/font/THSarabunNew.ttf"),
+	// 	});
+	// };
+	
     useEffect(() => {
 
-		// const handler = () => {
-		// 	setTimeout(() => {
-		// 		setLoading(false)
-		// 	}, 1500)
-		// }
-		// if(isLoading) {
-		// 	handler();
-		// }
-		// return () => handler();
-    })
+	})
+	
+
 	const checkIfLoggedIn = () => {
 		firebase.auth().onAuthStateChanged(function (user) {
 			if (user) {
@@ -208,7 +213,17 @@ LoginScreen = ({navigation}) => {
 				.signInWithEmailAndPassword(username, password)
 				.then((response) => {
 					console.log(response);
-				});
+				}).catch((err) => {
+					const errorCode = err.code;
+					console.log(errorCode);
+					if(errorCode === 'auth/user-not-found'){
+						alert('ข้อมูลอีเมลหรือรหัสผ่านไม่ถูกต้อง')
+					} else if(errorCode === 'auth/wrong-password') {
+						alert('ข้อมูลอีเมลหรือรหัสผ่านไม่ถูกต้อง')
+					} else if(errorCode === 'auth/invalid-email'){
+						alert('รูปแบบอีเมลไม่ถูกต้อง')
+					}
+				})
 		} catch (err) {
 			console.log(err.toString());
 		}
@@ -228,17 +243,19 @@ LoginScreen = ({navigation}) => {
 	};
 	return (
 		<View style={styles.container}>
-			<Text
-				style={{
+			<Image source={require('./images/logoLogin.jpg')} style={styles.resizeImage} />
+			{/* <Text
+				style={[styles.title2, {
 					justifyContent: "flex-start",
 					width: "100%",
 					marginVertical: 10,
-				}}
+				}]}
 			>
 				เข้าสู่ระบบ
-			</Text>
+			</Text> */}
+			<Text />
 			<Input
-				placeholder="Username"
+				placeholder="อีเมล"
 				autoCompleteType="username"
 				onChangeText={(text) => {
 					setUsername(text)
@@ -246,36 +263,42 @@ LoginScreen = ({navigation}) => {
 				leftIcon={<Icon name="user" size={24} color="black" />}
 				// errorStyle={{borderColor:"black", borderWidth: 3}}
 				errorMessage={isAltUsername === 1 ? "กรุณาใส่ Username" : ""}
-				style={
-					isAltUsername === 1
-						? { borderColor: "red", borderWidth: 0 }
-						: { borderWidth: 0 }
-				}
-				label="Username"
-			/>
+				inputContainerStyle={{borderColor:'#00aeed', borderWidth:1, padding:10, borderRadius:30}}
+				// style={
+				// 	isAltUsername === 1
+				// 		? { borderColor: "red", borderWidth: 0 }
+				// 		: { borderWidth: 0 }
+				// }
+				label={<Text style={[styles.label]}>อีเมล์ผู้ใช้งาน</Text>}
+				inputStyle={{marginLeft:7, fontFamily: 'thSarabunNew', fontSize: 28}}
+				/>
 			<Input
-				placeholder="Password"
+				placeholder="รหัสผ่าน"
 				autoCompleteType="password"
 				secureTextEntry={true}
 				onChangeText={(text) => {
 					setPassword(text);
 				}}
 				leftIcon={<Icon name="lock" size={24} color="black" />}
-				label="Password"
-				style={isAltPassword === 1 ? { borderColor: "red", borderWidth: 0 } : ""}
+				label={<Text style={[styles.label]}>รหัสผ่าน</Text>}
+				inputContainerStyle={{borderColor:'#00aeed', borderWidth:1, padding:10, borderRadius:30}}
+				// style={isAltPassword === 1 ? { borderColor: "red", borderWidth: 0 } : ""}
 				errorMessage={isAltPassword === 1 ? "กรุณาใส่ Password" : ""}
-			/>
-			<View style={styles.btn}>
-				<Button
-					onPress={() => changeElement(isUsername, isPassword)}
-					title="Log In"
-					buttonStyle={{ backgroundColor: "#7ad669" }}
-					accessibilityLabel="Learn more about this purple button"
+				inputStyle={{marginLeft:7, fontFamily: 'thSarabunNew', fontSize: 24}}
 				/>
+
+			<View style={styles.btn}>
+				<TouchableOpacity onPress={() => changeElement(isUsername, isPassword)} style={{backgroundColor:"#7ad669", alignItems:'center', justifyContent:'center', height:60, borderColor:"#7ad669", borderWidth:2, borderRadius: 50}}>
+					<Text style={{color:'white', fontFamily:'thSarabunNew', fontSize: 30}}>เข้าสู่ระบบ</Text>
+				</TouchableOpacity>
 			</View>
 			<View style={styles.signIn}>
-				<Text>Forgot Password ?</Text>
-				<Text>Sign In ?</Text>
+				<TouchableOpacity onPress={() => navigation.navigate('ForgotScreen')}>
+					<Text style={styles.label}>ลืมรหัสผ่าน ?</Text>
+				</TouchableOpacity>
+				<TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+				<Text style={styles.label}>สมัครสมาชิก</Text>
+				</TouchableOpacity>
 			</View>
 		</View>
 	);

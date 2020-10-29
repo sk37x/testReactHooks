@@ -387,11 +387,6 @@ BookBadmintonDetail = () => {
 				)}
 
 				<Text></Text>
-				<Button
-					style={{ paddingBottom: 20, paddingTop: 20 }}
-					title="ทดสอบ is Load"
-					onPress={() => firebaseDB()}
-				/>
 				<ProgressLoad />
 			</ScrollView>
 			{typeof isTimeSel !== "undefined" ? (
@@ -402,6 +397,7 @@ BookBadmintonDetail = () => {
 								name: "จองสนาม",
 								date: isDateSel.toString(),
 								time: isTimeSel,
+								cord: route.params.cord,
 							})
 						}
 					>

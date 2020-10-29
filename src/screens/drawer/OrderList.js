@@ -12,29 +12,25 @@ OrderDetail = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
 	const index = useNavigationState((state) => state.index);
-
+    const test = () => {
+		setListOrder(state => {
+		  console.log(state);
+		  console.log(allowedState);
+		  newArr = [...state, ...allowedState]
+		  return newArr;
+		});
+	  }
+	
 	const initialValue = [{ id: 0, value: " --- Select a State ---" }];
 
-	const allowedState = [
-		{ id: 1, value: "Alabama" },
-		{ id: 2, value: "Georgia" },
-		{ id: 3, value: "Tennessee" },
-	];
+
 
 	const [listOrder, setListOrder] = useState(initialValue);
 	const user = firebase.auth().currentUser;
 	const firebaseRef = firebase.database().ref();
 	useEffect(() => {
-    const test = () => {
-      setListOrder(state => {
-        console.log(state);
-        console.log(allowedState);
-        newArr = [...state, ...allowedState]
-        return newArr;
-      });
-    }
-  
-    test()}, []);
+
+	}, []);
 	// const st = () => {
 	// 	firebaseRef.child("mybooks/" + user.uid).once("value").then((listData) => {
 	// 	});
@@ -52,18 +48,21 @@ OrderDetail = () => {
 	// }, []);
 
 
-	console.log(listOrder.length);
+	const listItem = () => {
 
-	const TestComp = ({ test }) => {
-		console.log(test.length);
-		return <Text>test</Text>;
-	};
+	}
+	const allowedState = [
+		{ id: 1, value: "Alabama" },
+		{ id: 2, value: "Georgia" },
+		{ id: 3, value: "Tennessee" },
+	];
+
 
 	return (
 		<View style={styles.containerNotCenter}>
 			<Text style={styles.title}>รายการจอง</Text>
 			<View style={styles.container}>
-				<Text style={styles.title2}>ไม่มีรายการจอง</Text>
+				{/* <Text style={styles.title2}>ไม่มีรายการจอง</Text> */}
 			</View>
 			{/* <TestComp test={listOrder} />
 			<Button title="กลับหน้าแรก" onPress={() => console.log(listOrder)} /> */}

@@ -20,7 +20,7 @@ import Dropdown from "../../Dropdown";
 import ProgressLoader from "rn-progress-loader";
 import { Icon } from "react-native-elements";
 import ViewContent from "../../ViewContent";
-
+import firebase from 'firebase'
 // import Dropdown from '../../Dropdown'
 OrderDetail = () => {
 	const [selectedId, setSelectedId] = useState(null);
@@ -32,7 +32,7 @@ OrderDetail = () => {
 	const [isVisible, setVisible] = useState(false);
 	const [dataSave, setDataSave] = useState({});
 	const index = useNavigationState((state) => state.index);
-	console.log(index);
+	// console.log(index);
 	const [count, setCount] = useState(0);
 	const [testCount, setTestCount] = useState([
 		{ c: "test", test: 1 },
@@ -47,6 +47,8 @@ OrderDetail = () => {
 		{ id: 5, count: 0 },
 	]);
 
+
+	const user = firebase.auth().currentUser
 	const itemShow = [
 		{ id: 1, name: "น้ำเปล่าขวดใหญ่", price: "20" },
 		{ id: 2, name: "Sponsor", price: "15" },
@@ -54,6 +56,174 @@ OrderDetail = () => {
 		{ id: 4, name: "น้ำเปล่าขวดเล็ก", price: "10" },
 		{ id: 5, name: "Sprite", price: "20" },
 	];
+
+
+	const insertOrder = (orderLength, fieldId, timeId, itemResult) => {
+		let obj = {};
+		obj.orderBy = user.uid;
+		obj.orderByName = user.displayName;
+		obj.orderId = orderLength;
+		obj.orderTime = new Date().toString();
+		obj.orderFieldId = fieldId;
+		obj.orderFieldTime = timeId;
+		obj.itemOrder = [...itemResult]
+		return obj;
+	};
+	const testDB = () => {
+		const dataRef = firebase.database().ref();
+		const date = new Date(route.params.date);
+
+		var mean = false;
+		var insertIndex;
+		let selTime = route.params.time;
+		let selField = route.params.cord;
+
+		dataRef
+			.child("field/")
+			.once("value")
+			.then((snapshot) => {
+				var arr = [...snapshot.val()];
+
+				let findField = arr.find(({ fieldId }) => fieldId == selField);
+				let findFieldIndex = arr.findIndex(
+					({ fieldId }) => fieldId == selField
+				);
+
+				findField.fieldBook.map((v, i) => {
+					if (
+						v.date == date.getDate() &&
+						v.month == date.getMonth() &&
+						v.year == date.getFullYear()
+					) {
+						mean = true;
+						// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+ i));
+						let timer = v.timer;
+						timer.map((val, index) => {
+							if (val.value == selTime) {
+								// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+
+								let obj = val;
+								obj.booking = true;
+								snapshot.ref
+									.child(findFieldIndex + "/fieldBook/" + i + "/timer/" + index)
+									.set(obj);
+								dataRef.ref
+									.child("Order/")
+									.once("value")
+									.then((childVal) => {
+										let prepareData = insertOrder(
+											childVal.val().length,
+											findField.fieldId,
+											val.value,
+											isItemResult
+										);
+										// childVal.ref.child(childVal.val().length).set(prepareData)
+										childVal.ref.parent
+											.child("mybooks/" + user.uid)
+											.once("value")
+											.then((bookData) => {
+												console.log(bookData.val());
+												if (!bookData.val()) {
+													bookData.ref.child(0).set(prepareData);
+												} else {
+													bookData.ref
+														.child(bookData.val().length)
+														.set(prepareData);
+												}
+											});
+									});
+
+								// dataRef.child('mybooks/' + user.uid).set()
+							}
+						});
+					} else {
+						// insertDatetime()
+						// console.log(snapshot.ref.child(findFieldIndex + "/fieldBook/" + i));
+					}
+				});
+				// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+))
+
+				if (!mean) {
+					console.log("!mean");
+					let childRef = snapshot.ref.child(
+						findFieldIndex + "/fieldBook/" + findField.fieldBook.length
+					);
+					let pathSave =
+						findFieldIndex + "/fieldBook/" + findField.fieldBook.length;
+					childRef.set(insertDatetime(date));
+					childRef.once("value").then((snap2) => {
+						let timer = snap2.val().timer;
+						timer.map((val, index) => {
+							if (val.value == selTime) {
+								// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+								let obj = val;
+								console.log(obj);
+								obj.booking = true;
+								snapshot.ref.child(pathSave + "/timer/" + index).set(obj);
+								dataRef.ref
+									.child("Order/")
+									.once("value")
+									.then((childVal) => {
+										let prepareData = insertOrder(
+											childVal.val().length,
+											findField.fieldId,
+											val.value,
+											isItemResult
+										);
+										// childVal.ref.child(childVal.val().length).set(prepareData)
+										childVal.ref.parent
+											.child("mybooks/" + user.uid)
+											.once("value")
+											.then((bookData) => {
+												console.log(bookData.val());
+												if (!bookData.val()) {
+													bookData.ref.child(0).set(prepareData);
+												} else {
+													bookData.ref
+														.child(bookData.val().length)
+														.set(prepareData);
+												}
+											});
+									});
+							}
+						});
+					});
+				}
+			});
+
+		// dataRef
+		// 	.child("books")
+		// 	.once("value")
+		// 	.then((snapshot) => {
+		// 		let arr = [...snapshot.val()];
+		// 		let mean = false;
+		// 		arr.map((v, i) => {
+		// 			if (
+		// 				v.date == date.getDate() &&
+		// 				v.month == date.getMonth() &&
+		// 				v.year == date.getFullYear()
+		// 			) {
+		// 				mean = true;
+		// 				let timer = v.timer;
+		// 				timer.map((val, index) => {
+		// 					if(val.value == sel){
+		// 						// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+		// 						let obj = val;
+		// 						obj.booking = true;
+		// 						snapshot.ref.child(i+'/timer/'+index).set(obj);
+		// 						// dataRef.child('books/'+i+'/timer/'+index).set('')
+		// 					}
+		// 				})
+
+		// 			}
+		// 		});
+		// 		if (!mean) {
+		// 			let initData = setInitData(date);
+		// 			dataRef.child("books/" + arr.length).set(initData);
+		// 		}
+		// 	});
+		navigation.navigate('ListBook')
+	};
 
 	const addOrRemove = (action, val) => {
 		switch (action) {
@@ -231,7 +401,7 @@ OrderDetail = () => {
 				<ProgressLoad />
 			</ScrollView>
 			<View style={styleView.header_footer_style}>
-				<TouchableOpacity onPress={() => navigation.navigate('ListBook')}>
+				<TouchableOpacity onPress={() => testDB()}>
 					<Text style={styleView.textStyle}> จองสนาม </Text>
 				</TouchableOpacity>
 			</View>

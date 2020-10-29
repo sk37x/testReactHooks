@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from "react";
+import React, { Component, useEffect, useState, useRef } from "react";
 import {
 	StyleSheet,
 	Text,
@@ -12,7 +12,10 @@ import {
 	Linking,
 	Alert,
 	ScrollView,
+	ToastAndroid,
+	AlertIOS,
 } from "react-native";
+
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { styles } from "./css/style";
 import firebase from "firebase";
@@ -20,6 +23,8 @@ import axios from "axios";
 import { Icon } from "react-native-elements";
 import ViewContent from "./ViewContent";
 import { set } from "react-native-reanimated";
+import Toast from "react-native-toast-message";
+
 // clear Timeout Android
 const _setTimeout = global.setTimeout;
 const _clearTimeout = global.clearTimeout;
@@ -68,13 +73,18 @@ if (Platform.OS === "android") {
 
 const supportedURL = "fb://profile/100035064216737";
 
-const supportURL = () => {
+const supportURL = async () => {
 	let url = "fb://profile/100035064216737";
 	Linking.canOpenURL(url).then((chk) => {
-		if (chk == false) {
-			url = "https://www.facebook.com/profile.php?id=100035064216737";
-			Linking.openURL(url);
-		} else {
+		// console.log(chk)
+		if (Platform.OS == "android") {
+			if (chk == false) {
+				url = "https://www.facebook.com/profile.php?id=100035064216737";
+				Linking.openURL(url);
+			} else {
+				Linking.openURL(url);
+			}
+		} else if (Platform.OS == "ios") {
 			Linking.openURL(url);
 		}
 	});
@@ -84,101 +94,9 @@ Feed = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
 	const user = firebase.auth().currentUser;
+	// const viewElement = useRef(null);
 
 	useEffect(() => {}, []);
-
-	/*
-	const ViewContent = ({ count, item, result = null, addOrRemove }) => {
-		let showItem = [...item];
-		// let price = [...item.price];
-		return (
-			<View style={{ flex: 1 }}>
-				{showItem.map((val, index) => {
-					return (
-						<View
-							style={{
-								width: "100%",
-								flex: 1,
-								flexDirection: "row",
-								paddingLeft: 10,
-								paddingRight: 10,
-							}}
-							key={index}
-						>
-							<>
-								{!result ? (
-									<View
-										style={{
-											width: "20%",
-											height: 45,
-											flex: 1,
-											flexDirection: "row",
-											alignItems: "center",
-										}}
-									>
-										<Icon
-											onPress={() => {
-												addOrRemove("remove", val)
-											}}
-											style={[{ color: "white" }]}
-											size={24}
-											name={"remove"}
-										/>
-										<Text>{count[index].count}</Text>
-										<Icon
-											onPress={() => {
-												addOrRemove("add", val)
-												// console.log(val.id)
-											}}
-											style={[{ color: "white" }]}
-											size={24}
-											name={"add"}
-										/>
-									</View>
-								) : (
-									<View />
-								)}
-
-								<View
-									style={{
-										width: "60%",
-										height: 45,
-										alignContent: "center",
-										justifyContent: "center",
-									}}
-								>
-									<Text>
-										{!result
-											? val.name
-											: val.id
-											? itemShow.find((v) => v.id == val.id).name +
-											  " / จำนวน " +
-											  isCountItem.find((v) => v.id == val.id).count
-											: val.name}
-									</Text>
-								</View>
-
-								{result ? <View style={{ width: "20%" }} /> : <View />}
-
-								<View
-									style={{
-										width: "20%",
-										height: 45,
-										alignItems: "flex-end",
-										justifyContent: "center",
-										// backgroundColor: "brown",
-									}}
-								>
-									<Text>{val.price}฿</Text>
-								</View>
-							</>
-						</View>
-					);
-				})}
-			</View>
-		);
-	};
-*/
 
 	const setInitData = (date) => {
 		let obj = {};
@@ -350,20 +268,44 @@ Feed = () => {
 					let childRef = snapshot.ref.child(
 						findFieldIndex + "/fieldBook/" + findField.fieldBook.length
 					);
+					let pathSave =
+						findFieldIndex + "/fieldBook/" + findField.fieldBook.length;
 					childRef.set(insertDatetime(date));
-					let timer = childRef.timer;
-					console.log(timer);
-					timer.map((val, index) => {
-						if (val.value == selTime) {
-							// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
-							let obj = val;
-							obj.booking = true;
-							console.log(
-								snapshot.ref.child(
-									findFieldIndex + "/fieldBook/" + i + "/timer/" + index
-								)
-							);
-						}
+					childRef.once("value").then((snap2) => {
+						let timer = snap2.val().timer;
+						timer.map((val, index) => {
+							if (val.value == selTime) {
+								// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+								let obj = val;
+								console.log(obj);
+								obj.booking = true;
+								snapshot.ref.child(pathSave + "/timer/" + index).set(obj);
+								dataRef.ref
+									.child("Order/")
+									.once("value")
+									.then((childVal) => {
+										let prepareData = insertOrder(
+											childVal.val().length,
+											findField.fieldId,
+											val.value
+										);
+										// childVal.ref.child(childVal.val().length).set(prepareData)
+										childVal.ref.parent
+											.child("mybooks/" + user.uid)
+											.once("value")
+											.then((bookData) => {
+												console.log(bookData.val());
+												if (!bookData.val()) {
+													bookData.ref.child(0).set(prepareData);
+												} else {
+													bookData.ref
+														.child(bookData.val().length)
+														.set(prepareData);
+												}
+											});
+									});
+							}
+						});
 					});
 				}
 			});
@@ -410,19 +352,12 @@ Feed = () => {
 	];
 	const [listOrder, setListOrder] = useState(initialValue);
 	const TestComp = ({ item }) => {
-		if (item.length == 1) {
-			setListOrder((state) => {
-				let newArr = [...state, ...allowedState];
-				return newArr;
-			});
-		}
 		return <Text>{item.map((v) => v.id + ", ")}</Text>;
 	};
 	return (
 		<View>
 			<ScrollView contentContainerStyle={styleView.scrollContentContainer}>
 				{/* <TestComp item={listOrder} />
-
 				<Button title="testDB" onPress={() => testDB()} /> */}
 				{/* <ViewContent
 					count={isCountItem}
@@ -440,7 +375,6 @@ Feed = () => {
 					isCountItem={isCountItem}
 					// handlerMount={addTestCount}
 				/> */}
-
 				<Text style={styles.title2}>ข้อมูลข่าวสาร</Text>
 				<Image
 					source={require("./images/101749.jpg")}
