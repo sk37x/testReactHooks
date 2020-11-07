@@ -93,270 +93,17 @@ const supportURL = async () => {
 Feed = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
+	
 	const user = firebase.auth().currentUser;
+	const firebaseDB = firebase.database();
 	// const viewElement = useRef(null);
 
-	useEffect(() => {}, []);
-
-	const setInitData = (date) => {
-		let obj = {};
-		obj.date = date.getDate();
-		obj.month = date.getMonth();
-		obj.year = date.getFullYear();
-		obj.timer = [
-			{
-				booking: false,
-				label: "16.00 - 17.00 น.",
-				value: 1,
-				key: 1,
-			},
-			{
-				booking: false,
-				label: "17.00 - 18.00 น.",
-				value: 2,
-				key: 2,
-			},
-			{
-				booking: false,
-				label: "18.00 - 19.00 น.",
-				value: 3,
-				key: 3,
-			},
-			{
-				booking: false,
-				label: "19.00 - 20.00 น.",
-				value: 4,
-				key: 4,
-			},
-			{
-				booking: false,
-				label: "21.00 - 22.00 น.",
-				value: 5,
-				key: 5,
-			},
-		];
-		return obj;
-	};
-	const insertOrder = (orderLength, fieldId, timeId) => {
-		let obj = {};
-		obj.orderBy = user.uid;
-		obj.orderByName = user.displayName;
-		obj.orderId = orderLength;
-		obj.orderTime = new Date().toString();
-		obj.orderFieldId = fieldId;
-		obj.orderFieldTime = timeId;
-		return obj;
-	};
-
-	const insertDatetime = (date) => {
-		let fieldBook = {
-			month: date.getMonth(),
-			date: date.getDate(),
-			year: date.getFullYear(),
-
-			timer: [
-				{
-					value: 1,
-					label: "16.00 - 17.00 น.",
-					booking: false,
-				},
-				{
-					value: 2,
-					label: "17.00 - 18.00 น.",
-					booking: false,
-				},
-				{
-					value: 3,
-					label: "18.00 - 19.00 น.",
-					booking: false,
-				},
-				{
-					value: 4,
-					label: "19.00 - 20.00 น.",
-					booking: false,
-				},
-				{
-					value: 5,
-					label: "20.00 - 21.00 น.",
-					booking: false,
-				},
-				{
-					value: 6,
-					label: "21.00 - 22.00 น.",
-					booking: false,
-				},
-			],
-		};
-		return fieldBook;
-	};
-
-	const testDB = () => {
-		const dataRef = firebase.database().ref();
-		const date = new Date();
-
-		var mean = false;
-		var insertIndex;
-		let selTime = 5;
-		let selField = 1;
-
-		dataRef
-			.child("field/")
-			.once("value")
-			.then((snapshot) => {
-				var arr = [...snapshot.val()];
-
-				let findField = arr.find(({ fieldId }) => fieldId == selField);
-				let findFieldIndex = arr.findIndex(
-					({ fieldId }) => fieldId == selField
-				);
-
-				findField.fieldBook.map((v, i) => {
-					if (
-						v.date == date.getDate() &&
-						v.month == date.getMonth() &&
-						v.year == date.getFullYear()
-					) {
-						mean = true;
-						// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+ i));
-						let timer = v.timer;
-						timer.map((val, index) => {
-							if (val.value == selTime) {
-								// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
-
-								let obj = val;
-								obj.booking = true;
-								snapshot.ref
-									.child(findFieldIndex + "/fieldBook/" + i + "/timer/" + index)
-									.set(obj);
-								dataRef.ref
-									.child("Order/")
-									.once("value")
-									.then((childVal) => {
-										let prepareData = insertOrder(
-											childVal.val().length,
-											findField.fieldId,
-											val.value
-										);
-										// childVal.ref.child(childVal.val().length).set(prepareData)
-										childVal.ref.parent
-											.child("mybooks/" + user.uid)
-											.once("value")
-											.then((bookData) => {
-												console.log(bookData.val());
-												if (!bookData.val()) {
-													bookData.ref.child(0).set(prepareData);
-												} else {
-													bookData.ref
-														.child(bookData.val().length)
-														.set(prepareData);
-												}
-											});
-									});
-
-								// dataRef.child('mybooks/' + user.uid).set()
-							}
-						});
-					} else {
-						// insertDatetime()
-						// console.log(snapshot.ref.child(findFieldIndex + "/fieldBook/" + i));
-					}
-				});
-				// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+))
-
-				if (!mean) {
-					console.log("!mean");
-					let childRef = snapshot.ref.child(
-						findFieldIndex + "/fieldBook/" + findField.fieldBook.length
-					);
-					let pathSave =
-						findFieldIndex + "/fieldBook/" + findField.fieldBook.length;
-					childRef.set(insertDatetime(date));
-					childRef.once("value").then((snap2) => {
-						let timer = snap2.val().timer;
-						timer.map((val, index) => {
-							if (val.value == selTime) {
-								// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
-								let obj = val;
-								console.log(obj);
-								obj.booking = true;
-								snapshot.ref.child(pathSave + "/timer/" + index).set(obj);
-								dataRef.ref
-									.child("Order/")
-									.once("value")
-									.then((childVal) => {
-										let prepareData = insertOrder(
-											childVal.val().length,
-											findField.fieldId,
-											val.value
-										);
-										// childVal.ref.child(childVal.val().length).set(prepareData)
-										childVal.ref.parent
-											.child("mybooks/" + user.uid)
-											.once("value")
-											.then((bookData) => {
-												console.log(bookData.val());
-												if (!bookData.val()) {
-													bookData.ref.child(0).set(prepareData);
-												} else {
-													bookData.ref
-														.child(bookData.val().length)
-														.set(prepareData);
-												}
-											});
-									});
-							}
-						});
-					});
-				}
-			});
-
-		// dataRef
-		// 	.child("books")
-		// 	.once("value")
-		// 	.then((snapshot) => {
-		// 		let arr = [...snapshot.val()];
-		// 		let mean = false;
-		// 		arr.map((v, i) => {
-		// 			if (
-		// 				v.date == date.getDate() &&
-		// 				v.month == date.getMonth() &&
-		// 				v.year == date.getFullYear()
-		// 			) {
-		// 				mean = true;
-		// 				let timer = v.timer;
-		// 				timer.map((val, index) => {
-		// 					if(val.value == sel){
-		// 						// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
-		// 						let obj = val;
-		// 						obj.booking = true;
-		// 						snapshot.ref.child(i+'/timer/'+index).set(obj);
-		// 						// dataRef.child('books/'+i+'/timer/'+index).set('')
-		// 					}
-		// 				})
-
-		// 			}
-		// 		});
-		// 		if (!mean) {
-		// 			let initData = setInitData(date);
-		// 			dataRef.child("books/" + arr.length).set(initData);
-		// 		}
-		// 	});
-	};
-
-	const initialValue = [{ id: 0, value: " --- Select a State ---" }];
-
-	const allowedState = [
-		{ id: 1, value: "Alabama" },
-		{ id: 2, value: "Georgia" },
-		{ id: 3, value: "Tennessee" },
-	];
-	const [listOrder, setListOrder] = useState(initialValue);
-	const TestComp = ({ item }) => {
-		return <Text>{item.map((v) => v.id + ", ")}</Text>;
-	};
+	useEffect(() => {
+	}, []);
 	return (
 		<View>
 			<ScrollView contentContainerStyle={styleView.scrollContentContainer}>
+				{/* <Text>สวัสดี คุณ {route.params.user.displayName}</Text> */}
 				{/* <TestComp item={listOrder} />
 				<Button title="testDB" onPress={() => testDB()} /> */}
 				{/* <ViewContent
@@ -408,15 +155,15 @@ const styleView = StyleSheet.create({
 		paddingHorizontal: 15,
 	},
 	scrollContentContainer: {
-		paddingTop: 40,
+		paddingTop: 10,
 		paddingBottom: 10,
 	},
 });
 
 /*
 Feed = () => {
-	const navigation = useNavigation();
-	const route = useRoute();
+	// const navigation = useNavigation();
+	// const route = useRoute();
 	const [isVisible, setVisible] = useState(true)
 	let detailResult = route.params;
 	// console.log(route)
@@ -561,3 +308,221 @@ Feed = () => {
 };
 */
 export default Feed;
+
+
+/*
+const setInitData = (date) => {
+	let obj = {};
+	obj.date = date.getDate();
+	obj.month = date.getMonth();
+	obj.year = date.getFullYear();
+	obj.timer = [
+		{
+			booking: false,
+			label: "16.00 - 17.00 น.",
+			value: 1,
+			key: 1,
+		},
+		{
+			booking: false,
+			label: "17.00 - 18.00 น.",
+			value: 2,
+			key: 2,
+		},
+		{
+			booking: false,
+			label: "18.00 - 19.00 น.",
+			value: 3,
+			key: 3,
+		},
+		{
+			booking: false,
+			label: "19.00 - 20.00 น.",
+			value: 4,
+			key: 4,
+		},
+		{
+			booking: false,
+			label: "21.00 - 22.00 น.",
+			value: 5,
+			key: 5,
+		},
+	];
+	return obj;
+};
+const insertOrder = (orderLength, fieldId, timeId) => {
+	let obj = {};
+	obj.orderBy = user.uid;
+	obj.orderByName = user.displayName;
+	obj.orderId = orderLength;
+	obj.orderTime = new Date().toString();
+	obj.orderFieldId = fieldId;
+	obj.orderFieldTime = timeId;
+	return obj;
+};
+
+const insertDatetime = (date) => {
+	let fieldBook = {
+		month: date.getMonth(),
+		date: date.getDate(),
+		year: date.getFullYear(),
+
+		timer: [
+			{
+				value: 1,
+				label: "16.00 - 17.00 น.",
+				booking: false,
+			},
+			{
+				value: 2,
+				label: "17.00 - 18.00 น.",
+				booking: false,
+			},
+			{
+				value: 3,
+				label: "18.00 - 19.00 น.",
+				booking: false,
+			},
+			{
+				value: 4,
+				label: "19.00 - 20.00 น.",
+				booking: false,
+			},
+			{
+				value: 5,
+				label: "20.00 - 21.00 น.",
+				booking: false,
+			},
+			{
+				value: 6,
+				label: "21.00 - 22.00 น.",
+				booking: false,
+			},
+		],
+	};
+	return fieldBook;
+};
+
+const testDB = () => {
+	const dataRef = firebase.database().ref();
+	const date = new Date();
+
+	var mean = false;
+	var insertIndex;
+	let selTime = 5;
+	let selField = 1;
+
+	dataRef
+		.child("field/")
+		.once("value")
+		.then((snapshot) => {
+			var arr = [...snapshot.val()];
+
+			let findField = arr.find(({ fieldId }) => fieldId == selField);
+			let findFieldIndex = arr.findIndex(
+				({ fieldId }) => fieldId == selField
+			);
+
+			findField.fieldBook.map((v, i) => {
+				if (
+					v.date == date.getDate() &&
+					v.month == date.getMonth() &&
+					v.year == date.getFullYear()
+				) {
+					mean = true;
+					// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+ i));
+					let timer = v.timer;
+					timer.map((val, index) => {
+						if (val.value == selTime) {
+							// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+
+							let obj = val;
+							obj.booking = true;
+							snapshot.ref
+								.child(findFieldIndex + "/fieldBook/" + i + "/timer/" + index)
+								.set(obj);
+							dataRef.ref
+								.child("Order/")
+								.once("value")
+								.then((childVal) => {
+									let prepareData = insertOrder(
+										childVal.val().length,
+										findField.fieldId,
+										val.value
+									);
+									// childVal.ref.child(childVal.val().length).set(prepareData)
+									childVal.ref.parent
+										.child("mybooks/" + user.uid)
+										.once("value")
+										.then((bookData) => {
+											console.log(bookData.val());
+											if (!bookData.val()) {
+												bookData.ref.child(0).set(prepareData);
+											} else {
+												bookData.ref
+													.child(bookData.val().length)
+													.set(prepareData);
+											}
+										});
+								});
+
+							// dataRef.child('mybooks/' + user.uid).set()
+						}
+					});
+				} else {
+					// insertDatetime()
+					// console.log(snapshot.ref.child(findFieldIndex + "/fieldBook/" + i));
+				}
+			});
+			// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+))
+
+			if (!mean) {
+				console.log("!mean");
+				let childRef = snapshot.ref.child(
+					findFieldIndex + "/fieldBook/" + findField.fieldBook.length
+				);
+				let pathSave =
+					findFieldIndex + "/fieldBook/" + findField.fieldBook.length;
+				childRef.set(insertDatetime(date));
+				childRef.once("value").then((snap2) => {
+					let timer = snap2.val().timer;
+					timer.map((val, index) => {
+						if (val.value == selTime) {
+							// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+							let obj = val;
+							console.log(obj);
+							obj.booking = true;
+							snapshot.ref.child(pathSave + "/timer/" + index).set(obj);
+							dataRef.ref
+								.child("Order/")
+								.once("value")
+								.then((childVal) => {
+									let prepareData = insertOrder(
+										childVal.val().length,
+										findField.fieldId,
+										val.value
+									);
+									// childVal.ref.child(childVal.val().length).set(prepareData)
+									childVal.ref.parent
+										.child("mybooks/" + user.uid)
+										.once("value")
+										.then((bookData) => {
+											console.log(bookData.val());
+											if (!bookData.val()) {
+												bookData.ref.child(0).set(prepareData);
+											} else {
+												bookData.ref
+													.child(bookData.val().length)
+													.set(prepareData);
+											}
+										});
+								});
+						}
+					});
+				});
+			}
+		});
+
+
+};
+*/

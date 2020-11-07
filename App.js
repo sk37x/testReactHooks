@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import React, { Component, useState, useEffect } from "react";
-import * as Font from 'expo-font'
-
+import * as Font from "expo-font";
 
 import Screen1 from "./src/screens/drawer/Screen1";
 import Screen2 from "./src/screens/drawer/Screen2";
@@ -9,11 +8,14 @@ import Screen3 from "./src/screens/drawer/Screen3";
 import BookBadminton from "./src/screens/drawer/BookBadminton";
 import BookBadmintonDetail from "./src/screens/drawer/BookBadmintonDetail";
 import OrderList from "./src/screens/drawer/OrderList";
+import HistoryList from "./src/screens/drawer/HistoryList";
 import RuleScreen from "./src/screens/drawer/RuleScreen";
 import CordView from "./src/screens/drawer/CordView";
 import Dropdown from "./src/Dropdown";
 import ForgotScreen from "./src/ForgotScreen";
 import RegisterScreen from "./src/RegisterScreen";
+import UserConfig from "./src/UserConfig";
+import AddCourt from "./src/screens/drawerAdmin/AddCourt";
 
 // import BookScreen from './src/BookScreen'
 
@@ -28,9 +30,13 @@ import Feed from "./src/Feed";
 import Splash from "./src/Splash";
 import LoginScreen from "./src/LoginScreen";
 import LoadingScreen from "./src/LoadingScreen";
-import OrderDetail from './src/screens/drawer/OrderDetail'
-import { Platform, Text } from "react-native";
+import AdminDrawer from "./src/AdminDrawer";
+import OrderDetail from "./src/screens/drawer/OrderDetail";
+import OrderReport from "./src/screens/drawer/OrderReport";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { Icon } from "react-native-elements";
+import ShowListComponent from "./src/screens/drawerAdmin/ShowListComponent";
+import updateUser from "./src/api/apiUser";
 import {
 	NavigationContainer,
 	DefaultTheme,
@@ -54,8 +60,10 @@ import {
 	useColorScheme,
 	AppearanceProvider,
 } from "react-native-appearance";
-
+import TopTabCordView from "./src/screens/drawer/TopTabCordView";
+import TopTabCordViewAdmin from "./src/screens/drawerAdmin/TopTabCordViewAdmin";
 import { AuthContext } from "./src/AuthContext";
+import ProgressLoader from "rn-progress-loader";
 
 import firebase from "firebase";
 // import auth from '@react-native-firebase/auth'
@@ -73,7 +81,7 @@ const TestStack = createStackNavigator();
 const MaterialBottomTabs = createMaterialBottomTabNavigator();
 const MaterialTopTabs = createMaterialTopTabNavigator();
 const RootStack = createStackNavigator();
-
+const firebaseRef = firebase.database().ref();
 App = () => {
 	// const navigation = useNavigation();
 	// const route = useRoute()
@@ -89,8 +97,9 @@ App = () => {
 		},
 	};
 
-	const [user, setUser] = useState(null);
-	const [userToken, setUserToken] = useState(null);
+	// const [user, setUser] = useState(null);
+	// const [userToken, setUserToken] = useState(null);
+
 	// const checkAuth = () => {
 	// 	firebase.auth().onAuthStateChanged(function (userAuth) {
 	// 		if (userAuth && !user) {
@@ -103,22 +112,122 @@ App = () => {
 	// 		setUser(userAuth);
 	// 	}
 	// });
+	const [isVisible, setVisible] = useState(false);
 
+	const isLoading = async (nav) => {
+		setVisible(true);
+		setTimeout(() => {
+			setVisible(false);
+			nav.goBack();
+		}, 2500);
+	};
+	const ProgressLoad = () => (
+		<ProgressLoader
+			visible={isVisible}
+			isModal={true}
+			isHUD={true}
+			hudColor={"#000000"}
+			color={"#FFFFFF"}
+		/>
+	);
+	const [isUserDetail, setUserDetail] = useState(null);
 
+	const updateUserData = async (dataUpdate, navigation) => {
+		const user = firebase.auth().currentUser;
+		const uid = user.uid;
+		const ref = await firebaseRef.child(`users/${uid}`).once("value");
+		ref.ref.set(dataUpdate);
+		await isLoading(navigation);
+		// console.log(dataUpdate);
+	};
+
+	const toSetUserDetail = (obj) =>
+		setUserDetail((state) => {
+			let newObj = state ? Object.assign(state, obj) : Object.assign({}, obj);
+			return newObj;
+		});
 
 	useEffect(() => {
-		
-		// console.log(user);
-		// if (!user) {
-			// checkAuth()
-		// }
-		// return checkAuth();
-		return () => user;
+		// console.log('App update State')
+
+		return firebaseRef.off();
 	}, []);
 
+	// console.log(isUserDetail);
+
 	const Test = () => {
-		return (<Toast ref={viewElement} />)
-	}
+		return <Toast ref={viewElement} />;
+	};
+
+	const [isTitleFirst, setTitle] = useState("Badminton K6 (Admin)");
+	const toSetTitle = (str) => {
+		setTitle((state) => str);
+	};
+
+	// ref addCourt
+	const [tableImage, setTableImage] = useState("");
+	const [tableName, setTableName] = useState("");
+	const [isDataCourt, setDataCourt] = useState({
+		imageUri: "",
+		imageFullPath: "",
+		name: "",
+	});
+	const [isErr, setErr] = useState(undefined);
+
+	const updateType = async (refChild, dataUpdate, navigation) => {
+		console.log(refChild, " ----- ", dataUpdate);
+		const ref = await firebaseRef.child(refChild).once("value");
+		const findId = await firebaseRef
+			.child(`countId/${refChild.split("/")[0]}Id`)
+			.once("value");
+		const _id = findId.val();
+
+		let obj = { _id: _id };
+		const newObj = Object.assign(obj, dataUpdate);
+		if (ref.val()) {
+			if (dataUpdate.name.length === 0) {
+				alert("กรุณากรอกชื่อสนาม");
+				return false;
+			} else {
+				ref.child(ref.val().length + "/").ref.set(newObj);
+				findId.ref.set(_id + 1);
+			}
+		} else {
+			// for(const property in isDataCourt) {
+			// 	console.log(` ${property} : ${isDataCourt[property]}`)
+			// }
+
+			if (dataUpdate.name.length === 0) {
+				alert("กรุณากรอกชื่อสนาม");
+				return false;
+			} else {
+				ref.child("0/").ref.set(newObj);
+				findId.ref.set(_id + 1);
+			}
+		}
+		await isLoading(navigation);
+	};
+	const setState = (funcSet, value = undefined) => {
+		console.log("########  in App Component Function setState #####");
+		console.log(value);
+		console.log(typeof value);
+		console.log("########  in App Component Function setState #####");
+		if (value) {
+			if (typeof value === "text") {
+				funcSet((state) => value);
+			}
+			if (typeof value === "object") {
+				funcSet((state) => {
+					let newObj = Object.assign(state, value);
+					console.log(newObj);
+					return newObj;
+				});
+			}
+			//  else if(typeof value === 'text' ) {
+
+			// }
+		}
+	};
 
 	const createHomeStack = () => {
 		return (
@@ -131,17 +240,38 @@ App = () => {
 				<Stack.Screen
 					name="LoginScreen"
 					component={LoginScreen}
-					options={{ headerShown: false, title: <Text style={{fontFamily:'thSarabunNew', fontSize:20}}>เข้าสู่ระบบ</Text>}}
+					options={{
+						headerShown: false,
+						title: (
+							<Text style={{ fontFamily: "thSarabunNew", fontSize: 20 }}>
+								เข้าสู่ระบบ
+							</Text>
+						),
+					}}
 				/>
 				<Stack.Screen
 					name="ForgotScreen"
 					component={ForgotScreen}
-					options={{ title: <Text style={{fontFamily:'thSarabunNew', fontSize:20}}>ลืมรหัสผ่าน</Text>} }
+					options={{
+						title: (
+							<Text style={{ fontFamily: "thSarabunNew", fontSize: 20 }}>
+								ลืมรหัสผ่าน
+							</Text>
+						),
+					}}
 				/>
 				<Stack.Screen
 					name="RegisterScreen"
 					component={RegisterScreen}
-					options={{ title: <Text style={{fontFamily:'thSarabunNew', fontSize:30}}>สมัครสมาชิก</Text>}}
+					options={{
+						title: (
+							<Text
+								containerStyle={{ fontFamily: "thSarabunNew", fontSize: 30 }}
+							>
+								สมัครสมาชิก
+							</Text>
+						),
+					}}
 				/>
 				<Stack.Screen
 					name="Feed"
@@ -154,13 +284,189 @@ App = () => {
 								onPress={() =>
 									navigation.dispatch(DrawerActions.toggleDrawer())
 								}
-								style={[{ color: "white", marginLeft: 10 }]}
+								containerStyle={[{ marginLeft: 10 }]}
 								size={24}
 								name={"menu"}
 							/>
 						),
+						headerRight: () => (
+							<Icon
+								onPress={() => {
+									const user = firebase.auth().currentUser;
+									firebaseRef
+										.child("users/" + user.uid)
+										.once("value")
+										.then((snapshot) => {
+											let obj = snapshot.val();
+											toSetUserDetail(obj);
+											navigation.push("userconfig", { userData: obj });
+										})
+										.catch((err) => {
+											console.log("err | " + err);
+										});
+								}}
+								style={Platform.select({
+									ios: [{ color: "white", marginRight: 10 }],
+									android: [{ paddingRight: 50 }],
+								})}
+								size={24}
+								name={"account-circle"}
+							/>
+						),
+					})}
+					initialParams={{}}
+				/>
+
+				<Stack.Screen
+					name="userconfig"
+					children={() => (
+						<UserConfig
+							userDetail={isUserDetail}
+							setUserDetail={toSetUserDetail}
+							componentLoad={ProgressLoad}
+						/>
+					)}
+					options={({ navigation, route }) => ({
+						title: "แก้ไขข้อมูลผู้ใช้",
+						headerRight: () => (
+							<TouchableOpacity
+								onPress={() => updateUserData(isUserDetail, navigation)}
+								style={{
+									backgroundColor: "#6a097d",
+									borderRadius: 20,
+									marginRight: 20,
+									width: 79,
+									alignItems: "center",
+								}}
+							>
+								<Text
+									style={{
+										fontFamily: "thSarabunNew",
+										fontSize: 24,
+										color: "white",
+									}}
+								>
+									บันทึก
+								</Text>
+							</TouchableOpacity>
+						),
 					})}
 				/>
+				<Stack.Screen
+					name="AdminFeed"
+					children={AdminDrawer}
+					options={({ navigation, route }) => ({
+						title: <Text style={styles.title2}>{isTitleFirst}</Text>,
+						test: route.params.name,
+						headerLeft: () => (
+							<Icon
+								onPress={() =>
+									navigation.dispatch(DrawerActions.toggleDrawer())
+								}
+								containerStyle={[{ marginLeft: 10 }]}
+								size={24}
+								name={"menu"}
+								initialParams={{ setTitle: setTitle }}
+							/>
+						),
+						headerRight: () => {
+							return route.state ? (
+								route.state.index == 1 ? (
+									<Icon
+										containerStyle={{ marginRight: 10 }}
+										size={24}
+										name={"plus"}
+										type={"font-awesome"}
+										initialParams={{ setTitle: setTitle }}
+										onPress={() => navigation.push("addCourt")}
+									/>
+								) : (
+									<View />
+								)
+							) : (
+								<View />
+							);
+						},
+					})}
+				/>
+
+				<Stack.Screen
+					name="addCourt"
+					children={() => (
+						<AddCourt
+							funcSetState={setDataCourt}
+							funcSet={setState}
+							data={isDataCourt}
+							componentLoad={ProgressLoad}
+						/>
+					)}
+					options={({ navigation, route }) => ({
+						title: route.params ? (
+							route.params.type == "edit" ? (
+								<Text style={styles.title2}>แก้ไขข้อมูลสนาม</Text>
+							) : (
+								<Text style={styles.title2}>เพิ่มสนาม</Text>
+							)
+						) : (
+							<Text style={styles.title2}>เพิ่มสนาม</Text>
+						),
+						headerRight: () => {
+							return route.params ? (
+								<TouchableOpacity
+									onPress={() => updateType("court/", isDataCourt, navigation)}
+									style={{
+										backgroundColor: "#6a097d",
+										borderRadius: 20,
+										marginRight: 20,
+										width: 79,
+										alignItems: "center",
+									}}
+								>
+									<Text
+										style={{
+											fontFamily: "thSarabunNew",
+											fontSize: 24,
+											color: "white",
+										}}
+									>
+										เพิ่ม
+									</Text>
+								</TouchableOpacity>
+							) : (
+								<TouchableOpacity
+									onPress={() => updateType("court/", isDataCourt, navigation)}
+									style={{
+										backgroundColor: "#6a097d",
+										borderRadius: 20,
+										marginRight: 20,
+										width: 79,
+										alignItems: "center",
+									}}
+								>
+									<Text
+										style={{
+											fontFamily: "thSarabunNew",
+											fontSize: 24,
+											color: "white",
+										}}
+									>
+										แก้ไข
+									</Text>
+								</TouchableOpacity>
+							);
+						},
+					})}
+				/>
+				{/* Stack Courd */}
+
+				<Stack.Screen
+					name="showList"
+					children={ShowListComponent}
+					options={{
+						title: "List",
+					}}
+				/>
+
 				<Stack.Screen
 					name="Detail"
 					component={Detail}
@@ -183,6 +489,13 @@ App = () => {
 					})}
 				/>
 				<Stack.Screen
+					name="orderReport"
+					component={OrderReport}
+					options={({ navigation, route }) => ({
+						title: <Text style={styles.title2}>{route.params.name}</Text>,
+					})}
+				/>
+				<Stack.Screen
 					name="Test"
 					component={Dropdown}
 					options={({ navigation, route }) => ({
@@ -198,9 +511,9 @@ App = () => {
 
 	const TestStackScreen = () => (
 		<TestStack.Navigator>
-			<TestStack.Screen name='Home' component={createDrawer} />
+			<TestStack.Screen name="Home" component={createDrawer} />
 		</TestStack.Navigator>
-	)
+	);
 
 	const createTopTabs = (props) => {
 		return (
@@ -208,13 +521,32 @@ App = () => {
 				<MaterialTopTabs.Screen
 					name="Tab 1"
 					component={Tab1}
-					options={{ title: props.route.params.name }}
+					options={{ title: "สนามที่ 1" }}
 				/>
-				<MaterialTopTabs.Screen name="Tab 2" component={Tab2} />
-				<MaterialTopTabs.Screen name="Tab 3" component={Tab3} />
+				<MaterialTopTabs.Screen
+					name="Tab 2"
+					component={Tab2}
+					options={{ title: "" }}
+				/>
+				<MaterialTopTabs.Screen
+					name="Tab 3"
+					component={Tab3}
+					options={{ title: "" }}
+				/>
+				<MaterialTopTabs.Screen
+					name="Tab 4"
+					component={Tab3}
+					options={{ title: "" }}
+				/>
+				<MaterialTopTabs.Screen
+					name="Tab 5"
+					component={Tab3}
+					options={{ title: "" }}
+				/>
 			</MaterialTopTabs.Navigator>
 		);
 	};
+
 	const createBottomTabs = () => {
 		return (
 			<MaterialBottomTabs.Navigator>
@@ -224,14 +556,51 @@ App = () => {
 			</MaterialBottomTabs.Navigator>
 		);
 	};
-
+	const createBottomTabsHistory = () => {
+		return (
+			<MaterialBottomTabs.Navigator
+				activeColor="white"
+				inactiveColor="black"
+				barStyle={{ backgroundColor: "#00aeed" }}
+			>
+				<MaterialBottomTabs.Screen
+					name="ListBook"
+					component={OrderList}
+					options={{
+						tabBarLabel: "รายการจอง",
+						tabBarIcon: ({ color }) => (
+							<Icon name="list" style="font-awesome" color={color} size={26} />
+						),
+					}}
+				/>
+				<MaterialBottomTabs.Screen
+					name="Screen 1"
+					component={HistoryList}
+					options={{
+						tabBarLabel: "ประวัติการจอง",
+						tabBarIcon: ({ color }) => (
+							<Icon
+								name="history"
+								style="font-awesome"
+								color={color}
+								size={26}
+							/>
+						),
+					}}
+				/>
+			</MaterialBottomTabs.Navigator>
+		);
+	};
 
 	const DrawerContent = (props) => (
 		<DrawerContentScrollView {...props}>
-			<DrawerItemList {...props} labelStyle={{fontFamily:"thSarabunNew", fontSize:22}} />
+			<DrawerItemList
+				{...props}
+				labelStyle={{ fontFamily: "thSarabunNew", fontSize: 22 }}
+			/>
 			<DrawerItem
 				label="ออกจากระบบ"
-				labelStyle={{fontFamily:"thSarabunNew", fontSize:22}}
+				labelStyle={{ fontFamily: "thSarabunNew", fontSize: 22 }}
 				onPress={() => {
 					firebase.auth().signOut();
 					//   props.navigation.navigate('Contacts')
@@ -257,12 +626,17 @@ App = () => {
 				/>
 				<Drawer.Screen
 					name="ListBook"
-					children={OrderList}
+					component={createBottomTabsHistory}
 					options={{ title: "รายการจอง" }}
 					initialParams={{ ...props.route.params }}
 				/>
-				<Drawer.Screen name="ตารางการใช้สนาม" component={CordView} />
+				<Drawer.Screen name="ตารางการใช้สนาม" component={TopTabCordView} />
 				<Drawer.Screen name="กฎเกณฑ์การใช้สนาม" component={RuleScreen} />
+				<Drawer.Screen
+					name="#### ทดสอบระบบ ####"
+					component={Detail}
+					initialParams={{ screenName: "Detail" }}
+				/>
 			</Drawer.Navigator>
 		);
 	};

@@ -45,25 +45,27 @@ RegisterScreen = () => {
 	const [count, setCount] = useState(0);
 
 	const auth = firebase.auth();
-	const createUser = (value) => {
+	const createUser = async(value) => {
 		const { email, password, name } = value;
-		firebase
-			.auth()
+		auth
 			.createUserWithEmailAndPassword(email, password)
-			.then((user) => {
+			.then(async(user) => {
 				setCase6("");
-				user
+				const users = firebase.auth().currentUser
+				await user.user
 					.updateProfile({
 						displayName: name,
 					})
 					.then(function (success) {
 						// Update successful.
-						console.log(success);
+						// console.log(success)
 					})
 					.catch(function (error) {
 						// An error happened.
 						console.log(error);
 					});
+				logUser(user, name)
+				// firebase.auth().signOut();
 			})
 			.catch(function (error) {
 				var errorCode = error.code;
@@ -74,6 +76,16 @@ RegisterScreen = () => {
 				}
 			});
 	};
+
+	const logUser = (user, name) => {
+		var ref = firebase.database().ref("users/" + user.user.uid);
+		console.log(user)
+		console.log(name);
+		var obj = {
+			displayName: name
+		}
+		ref.set(obj)
+	}
 
 	const validate = (value) => {
 		const { email, name, password, passwordConf } = value;

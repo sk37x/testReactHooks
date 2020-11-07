@@ -1,3 +1,4 @@
+import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { useEffect } from "react";
 import * as Font from "expo-font";
@@ -21,9 +22,20 @@ export const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 	},
+	containerNotMargin: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+	},
 	containerNotCenter: {
 		flex: 1,
-		margin: 20,
+		padding: 20,
+	},
+	containerNotCenterIOS: {
+		flex: 1,
+		marginLeft: 20,
+		marginRight: 20,
+		marginTop: StatusBar.currentHeight || 0,
 	},
 	containerLogin: {
 		flex: 1,

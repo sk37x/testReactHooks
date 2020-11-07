@@ -18,20 +18,35 @@ const Splash = () => (
 
 LoadingScreen = () => {
 	const navigation = useNavigation();
+	const route = useRoute();
+	const firebaseRef = firebase.database().ref();
 	useEffect(() => {
 		let a = () => {
-			firebase.auth().onAuthStateChanged((user) => {
-				// console.log(user);
+			firebase.auth().onAuthStateChanged(async (user) => {
 				if (user) {
-					navigation.reset({
-						index: 0,
-						routes: [
-							{
-								name: "Feed",
-								params: { someParam: "Param1", user: { ...user.toJSON() } },
-							},
-						],
-					});
+					let findRole = await firebaseRef.child("users/" + user.uid).once("value");
+					let { role, displayName } = findRole.val();
+					if (role === "admin") {
+						navigation.reset({
+							index: 0,
+							routes: [
+								{
+									name: "AdminFeed",
+									params: { someParam: "Admin", userName: displayName },
+								},
+							],
+						});
+					} else {
+						navigation.reset({
+							index: 0,
+							routes: [
+								{
+									name: "Feed",
+									params: { someParam: "Param1", user: { ...user.toJSON() } },
+								},
+							],
+						});
+					}
 				} else {
 					navigation.reset({
 						index: 0,
@@ -47,7 +62,9 @@ LoadingScreen = () => {
 		};
 
 		setTimeout(() => a(), 1000);
-	});
+		// return firebaseRef.off();
+	}, []);
+
 	return Splash();
 };
 

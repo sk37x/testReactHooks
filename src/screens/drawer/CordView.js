@@ -17,15 +17,19 @@ import {
 	useNavigation,
 	useRoute,
 	useNavigationState,
+	useIsFocused,
 } from "@react-navigation/native";
 import firebase from "firebase";
 
 CordView = () => {
 	const navigation = useNavigation();
-	const [selectedId, setSelectedId] = useState(null);
-
 	const route = useRoute();
+	const [selectedId, setSelectedId] = useState(null);
 	const index = useNavigationState((state) => state.index);
+	const isFocused = useIsFocused();
+	useEffect(() => {
+		// console.log(route.params.timeArr);
+	}, [isFocused]);
 	const DATA = [
 		{
 			value: 0,
@@ -66,19 +70,28 @@ CordView = () => {
 	];
 
 	const Item = ({ item, onPress, style }) => (
-		<TouchableOpacity
-			key={item.value}
-			onPress={onPress}
-			style={[styleList.item, style]}
-		>
-			<Text style={styleList.title}>{item.label}</Text>
-		</TouchableOpacity>
+		<View>
+			{item.booking.toString() == "false" ? (
+				<TouchableOpacity
+					key={item.value}
+					// onPress={onPress}
+					style={[styleList.item, style]}
+				>
+					<Text style={styleList.title}>{item.label}</Text>
+				</TouchableOpacity>
+			) : (
+				<View style={[styleList.item, style]}>
+					<Text style={styleList.title}>{item.label}</Text>
+				</View>
+			)}
+		</View>
 	);
 	const ItemText = ({ item, onPress, style }) => (
-		<View style={{marginTop:20,marginLeft:20,marginRight:20}}>
+		<View style={{ marginTop: 20, marginLeft: 20, marginRight: 20 }}>
 			<Text style={styles.title2}>
 				ตารางการใช้สนามของวันที่
-				{date.getDate() +
+				{" " +
+					date.getDate() +
 					" " +
 					monthName[date.getMonth()] +
 					" " +
@@ -102,20 +115,27 @@ CordView = () => {
 	];
 	const date = new Date();
 	const renderItem = ({ item }) => {
-		const backgroundColor = item.header ? "white" : "#a8dda8";
-		return item.header ? (
+		const backgroundColor = item.value == 1 ? "white" : "";
+		return item.value == 1 ? (
 			<ItemText item={item} style={{ backgroundColor }} />
 		) : (
-			<Item item={item} style={{ backgroundColor }} />
+			<Item
+				item={item}
+				style={[
+					item.booking.toString() == "false"
+						? styleList.colorSuccess
+						: styleList.colorDark,
+				]}
+			/>
 		);
 	};
 
 	return (
 		<SafeAreaView style={styleList.container}>
 			<FlatList
-				data={DATA}
+				data={route.params.timeArr}
 				renderItem={renderItem}
-				keyExtractor={(item) => item.id}
+				keyExtractor={(item, index) => index.toString()}
 				extraData={selectedId}
 			/>
 		</SafeAreaView>
@@ -152,6 +172,16 @@ const styleList = StyleSheet.create({
 	},
 	title: {
 		fontSize: 20,
+	},
+	colorSuccess: {
+		color: "#155724",
+		backgroundColor: "#d4edda",
+		borderColor: "#c3e6cb",
+	},
+	colorDark: {
+		color: "#1b1e21",
+		backgroundColor: "#d6d8d9",
+		borderColor: "#c6c8ca",
 	},
 });
 

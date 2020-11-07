@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	FlatList,
 	SafeAreaView,
@@ -9,7 +9,9 @@ import {
 	TouchableOpacity,
 	Image,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, useIsFocused } from "@react-navigation/native";
+import * as firebase from 'firebase'
+
 
 const DATA = [
 	{
@@ -46,20 +48,59 @@ const DATA = [
 
 
 
-const Item = ({ item, onPress, style }) => (
-	<TouchableOpacity onPress={onPress} style={[styles.item, style]}>
-		<Image style={{ width: "100%", height: 200 }} source={item.url} />
-		<Text style={styles.title}>{item.title}</Text>
-	</TouchableOpacity>
-);
+
 
 BookBadminton = () => {
 	const [selectedId, setSelectedId] = useState(null);
 	const navigation = useNavigation();
 	const route = useRoute();
+	const user = firebase.auth().currentUser;
+	const firebaseRef = firebase.database().ref();
+	const isFocused = useIsFocused();
+	const [dataCord, setDataCord] = useState(null);
+
+	const toSetArray = (newData) => {
+		setDataCord((state) => {
+			state = newData;
+			return state;
+		});
+	};
+
+	const Item = ({ item, onPress, style }) => (
+		<TouchableOpacity onPress={onPress} style={[styles.item, style]}>
+			<Image style={{ width: "100%", height: 200 }} source={item.url} />
+			<Text style={styles.title}>{item.title}</Text>
+		</TouchableOpacity>
+	);
+	const fetchData = () => {
+		let arrToSet = [];
+		firebaseRef.child('field/').on('value', (snapshot) => {
+			let snapArr = snapshot.val();
+			let obj = {};
+			snapArr.map((val, index) => {
+				obj.fieldId = val.fieldId;
+				obj.fieldName = val.fieldName;
+				// รอแก้ไข
+				obj.url = DATA[index].url;
+				arrToSet.push(obj)
+			})
+			console.log(arrToSet);
+			toSetArray(arrToSet)
+		})
+	}
+	
+
+	useEffect(() => {
+		let a = fetchData();
+		return () => {
+			firebaseRef.off();
+		}
+	}, [isFocused])
+	console.log(dataCord);
 
 	const renderItem = ({ item }) => {
 		const backgroundColor = item.id === selectedId ? "white" : "white";
+		console.log(item)
 		return (
 			<Item
 				item={item}
@@ -82,7 +123,7 @@ BookBadminton = () => {
 			<FlatList
 				data={DATA}
 				renderItem={renderItem}
-				keyExtractor={(item) => item.id}
+				keyExtractor={(item, index) => index.toString()}
 				extraData={selectedId}
 			/>
 		</SafeAreaView>

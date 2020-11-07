@@ -7,7 +7,6 @@ import {
 	FlatList,
 	ScrollView,
 	SafeAreaView,
-	Platform,
 } from "react-native";
 import { styles } from "../../css/style";
 import {
@@ -19,6 +18,7 @@ import {
 import firebase from "firebase";
 import { ListItem, Avatar } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale"; // https://github.com/kohver/react-native-touchable-scale
+import ButtonFixedBottom from "./ButtonFixedBottom";
 
 OrderDetail = () => {
 	const navigation = useNavigation();
@@ -33,7 +33,6 @@ OrderDetail = () => {
 			state = newData;
 			return state;
 		});
-
 	useEffect(() => {
 		// fetch("https://jsonplaceholder.typicode.com/todos/1")
 		// 	.then((response) => response.json())
@@ -48,7 +47,7 @@ OrderDetail = () => {
 				var arr = [];
 				snapshot.val().map((v, i) => {
 					let valDate = new Date(v.orderTimeSel);
-					if (valDate >= date) {
+					if (valDate < date) {
 						v.key = i;
 						arr.push(v);
 					}
@@ -161,13 +160,20 @@ OrderDetail = () => {
 					);
 				}}
 			/>
+
 		);
 	};
+	// const notData = (data) => {
+	// 	return !data ? (
+	// 		<View>
+	// 			<Text>ไม่มีข้อมูล</Text>
+	// 		</View>
+	// 	) : (
+	// 		<View />
+	// 	);
+	// };
 	return (
-		<SafeAreaView style={Platform.select({
-			ios:styles.containerNotCenterIOS,
-			android:styles.containerNotCenter
-		})}>
+		<SafeAreaView style={styles.containerNotCenter}>
 			{showListOrder(data)}
 		</SafeAreaView>
 	);
@@ -183,11 +189,12 @@ OrderDetail = () => {
 	// 	</View>
 	// );
 };
+
+export default OrderDetail;
+
 const styleView = StyleSheet.create({
 	scrollContentContainer: {
 		paddingTop: 10,
 		paddingBottom: 10,
 	},
 });
-
-export default OrderDetail;

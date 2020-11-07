@@ -22,6 +22,11 @@ import { Icon } from "react-native-elements";
 import ViewContent from "../../ViewContent";
 import firebase from 'firebase'
 // import Dropdown from '../../Dropdown'
+
+
+
+
+
 OrderDetail = () => {
 	const [selectedId, setSelectedId] = useState(null);
 	const navigation = useNavigation();
@@ -39,6 +44,7 @@ OrderDetail = () => {
 		{ c: "test2", test: 2 },
 	]);
 	const [total, setTotal] = useState(0);
+	const [dataState, setDataState] = useState(null)
 	const [isCountItem, setCountItem] = useState([
 		{ id: 1, count: 0 },
 		{ id: 2, count: 0 },
@@ -58,17 +64,79 @@ OrderDetail = () => {
 	];
 
 
-	const insertOrder = (orderLength, fieldId, timeId, itemResult) => {
+	const insertOrder = (orderLength, fieldId, timeId, itemResult, timeSel) => {
 		let obj = {};
 		obj.orderBy = user.uid;
 		obj.orderByName = user.displayName;
 		obj.orderId = orderLength;
+		obj.orderTimeSel = timeSel
 		obj.orderTime = new Date().toString();
 		obj.orderFieldId = fieldId;
 		obj.orderFieldTime = timeId;
 		obj.itemOrder = [...itemResult]
 		return obj;
 	};
+	const insertDatetime = (date) => {
+		let fieldBook = {
+			month: date.getMonth(),
+			date: date.getDate(),
+			year: date.getFullYear(),
+
+			timer: [
+				{
+					value: 1,
+					label: "16.00 - 17.00 น.",
+					booking: false,
+				},
+				{
+					value: 2,
+					label: "17.00 - 18.00 น.",
+					booking: false,
+				},
+				{
+					value: 3,
+					label: "18.00 - 19.00 น.",
+					booking: false,
+				},
+				{
+					value: 4,
+					label: "19.00 - 20.00 น.",
+					booking: false,
+				},
+				{
+					value: 5,
+					label: "20.00 - 21.00 น.",
+					booking: false,
+				},
+				{
+					value: 6,
+					label: "21.00 - 22.00 น.",
+					booking: false,
+				},
+			],
+		};
+		return fieldBook;
+	};
+
+	const toSetState = (newArr) => setDataState(state => [...state, ...newArr])
+
+	const isLoading = () => {
+		setVisible(true);
+		setTimeout(() => {
+			setVisible(false);
+		}, 5000);
+	}
+	
+	const findMyOrder = (uid) => {
+		firebase.database().ref("mybooks/" + uid)
+		.once("value")
+		.then((value) => {
+			console.log("IN FUNCTION #######")
+			toSetState(value.val())
+			console.log("IN FUNCTION #######")
+		})
+	}
+
 	const testDB = () => {
 		const dataRef = firebase.database().ref();
 		const date = new Date(route.params.date);
@@ -115,7 +183,8 @@ OrderDetail = () => {
 											childVal.val().length,
 											findField.fieldId,
 											val.value,
-											isItemResult
+											isItemResult,
+											date.toString()
 										);
 										// childVal.ref.child(childVal.val().length).set(prepareData)
 										childVal.ref.parent
@@ -168,7 +237,8 @@ OrderDetail = () => {
 											childVal.val().length,
 											findField.fieldId,
 											val.value,
-											isItemResult
+											isItemResult,
+											date.toString()
 										);
 										// childVal.ref.child(childVal.val().length).set(prepareData)
 										childVal.ref.parent
@@ -188,6 +258,7 @@ OrderDetail = () => {
 							}
 						});
 					});
+
 				}
 			});
 
@@ -222,7 +293,12 @@ OrderDetail = () => {
 		// 			dataRef.child("books/" + arr.length).set(initData);
 		// 		}
 		// 	});
-		navigation.navigate('ListBook')
+		// findMyOrder(user.uid)
+		console.log(this)
+		isLoading();
+		setTimeout(() => {
+			navigation.navigate('ListBook')
+		}, 5500)
 	};
 
 	const addOrRemove = (action, val) => {
@@ -452,6 +528,7 @@ const styleView = StyleSheet.create({
 	},
 	textStyle: {
 		textAlign: "center",
+		fontFamily: 'thSarabunNew',
 		color: "#fff",
 		fontSize: 22,
 		padding: 7,
