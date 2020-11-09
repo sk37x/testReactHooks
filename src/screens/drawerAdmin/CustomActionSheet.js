@@ -180,7 +180,10 @@ CustomActionSheet = (props) => {
 						.then((snapshot) => {
 							snapshot.ref.getDownloadURL().then((downloadUrl) => {
 								console.log("url :", downloadUrl);
-								let objImage = { imageUri: downloadUrl };
+								let objImage = {
+									imageFullPath: snapshot.ref.fullPath.toString(),
+									imageUri: downloadUrl,
+								};
 								props.funcSet(props.funcSetState, objImage);
 								props.setImageUri(downloadUrl);
 

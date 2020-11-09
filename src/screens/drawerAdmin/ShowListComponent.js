@@ -36,6 +36,7 @@ ShowListComponent = (props) => {
 	useEffect(() => {
 		// console.log(route.params.type);
 		// props.isLoading();
+		
 		if (route.params.type === "court") {
 			firebaseRef
 				.child(route.params.type + "/")

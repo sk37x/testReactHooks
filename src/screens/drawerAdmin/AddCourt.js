@@ -126,7 +126,7 @@ AddCourt = (props) => {
 					setImageUri={setImageUri}
 				/>
 			</ScrollView>
-			{route.params.type === "edit" ? (
+			{(route.params && route.params.type === "edit") ? (
 				<ButtonFixedBottomDeleteCourt
 					color={"#721c24"}
 					backgroundcolor={"#f8d7da"}
