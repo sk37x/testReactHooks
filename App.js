@@ -71,7 +71,7 @@ import firebase from "firebase";
 // import auth from '@react-native-firebase/auth'
 import { firebaseConfig } from "./config";
 import { styles } from "./src/css/style";
-import Toast from "react-native-toast-message";
+// import Toast from "react-native-toast-message";
 
 if (!firebase.apps.length) {
 	firebase.initializeApp(firebaseConfig);
@@ -157,9 +157,9 @@ App = () => {
 
 	// console.log(isUserDetail);
 
-	const Test = () => {
-		return <Toast ref={viewElement} />;
-	};
+	// const Test = () => {
+	// 	return <Toast ref={viewElement} />;
+	// };
 
 	const [isTitleFirst, setTitle] = useState("Badminton K6 (Admin)");
 	const toSetTitle = (str) => {
@@ -553,14 +553,14 @@ App = () => {
 				/>
 				<Stack.Screen
 					name="orderDetail"
-					component={OrderDetail}
+					children={() => <OrderDetail />}
 					options={({ route }) => ({
 						title: route.params.name,
 					})}
 				/>
 				<Stack.Screen
 					name="orderReport"
-					component={OrderReport}
+					children={() => <OrderReport />}
 					options={({ navigation, route }) => ({
 						title: <Text style={styles.title2}>{route.params.name}</Text>,
 					})}
@@ -635,7 +635,7 @@ App = () => {
 			>
 				<MaterialBottomTabs.Screen
 					name="ListBook"
-					component={OrderList}
+					children={() => <OrderList />}
 					options={{
 						tabBarLabel: "รายการจอง",
 						tabBarIcon: ({ color }) => (
@@ -644,8 +644,8 @@ App = () => {
 					}}
 				/>
 				<MaterialBottomTabs.Screen
-					name="Screen 1"
-					component={HistoryList}
+					name="HistoryList"
+					children={() => <HistoryList />}
 					options={{
 						tabBarLabel: "ประวัติการจอง",
 						tabBarIcon: ({ color }) => (

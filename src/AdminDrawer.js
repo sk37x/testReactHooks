@@ -96,7 +96,7 @@ AdminDrawer = () => {
 				initialParams={{type:"timer"}}
 			/> */}
 			<Drawer.Screen name="listUser" component={UserList} options={{title:'ผู้ใช้งานทั้งหมด'}} />
-			<Drawer.Screen name="checkListTable" component={TopTabCordViewAdmin} options={{title:'ตารางการใช้สนาม'}} />
+			<Drawer.Screen name="checkListTable" component={TopTabCordView} options={{title:'ตารางการใช้สนาม'}} />
 			<Drawer.Screen name="กฎเกณฑ์การใช้สนาม" component={RuleScreen} />
 		</Drawer.Navigator>
 	);

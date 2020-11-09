@@ -194,18 +194,26 @@ LoginScreen = () => {
 	// };
 	
     useEffect(() => {
-
-	})
+		console.log('login Screen')
+	}, [])
 	
 
 	const checkIfLoggedIn = () => {
 		firebase.auth().onAuthStateChanged(function (user) {
 			if (user) {
-				navigation.push("Feed", { userData: 'yes' });
+				navigation.navigate("Feed", { userData: 'yes' });
 			}
 		});
 	};
 	const checkUserPass = (username, password) => {
+		if(username.trim().length == 0) {
+			alert('กรุณากรอกอีเมลผู้ใช้งาน')
+			return false;
+		}
+		if(password.trim().length == 0) {
+			alert('กรุณากรอกพาสเวิร์ด')
+			return false;
+		}
 		try {
 			console.log("HelloWorld");
 			firebase

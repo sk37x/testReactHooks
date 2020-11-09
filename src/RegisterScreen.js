@@ -61,28 +61,41 @@ RegisterScreen = () => {
 						// console.log(success)
 					})
 					.catch(function (error) {
-						// An error happened.
-						console.log(error);
+						var errorCode = error.code;
+						var errorMessage = error.message;
+						console.log(errorCode, " errorCode")
+						console.log(errorMessage, " errorMessage")
+
+
+
+						
 					});
-				logUser(user, name)
+				logUser(user, name, email)
 				// firebase.auth().signOut();
 			})
 			.catch(function (error) {
 				var errorCode = error.code;
 				var errorMessage = error.message;
 				console.log(errorCode, errorMessage);
-				if (errorCode == "auth/invalid-email") {
-					setCase6("รูปแบบอีเมลไม่ถูกต้อง");
+				if(errorCode == 'auth/email-already-in-use'){
+					alert('มีอีเมลผู้ใช้อยู่ในระบบแล้ว')
+				} else if(errorCode == 'auth/invalid-email'){
+					alert('อีเมลไม่ถูกต้อง')
+				} else if(errorCode == 'auth/operation-not-allowed'){
+					alert('ไม่สามารถสมัครสมาชิกได้ กรุณาติดต่อผู้ดูแล')
+				} else if(errorCode == 'auth/weak-password'){
+					alert('กรุณาใส่พาสเวิร์ดมากกว่า 6 ตัว')
 				}
+
 			});
 	};
 
-	const logUser = (user, name) => {
+	const logUser = (user, name, email) => {
 		var ref = firebase.database().ref("users/" + user.user.uid);
-		console.log(user)
-		console.log(name);
 		var obj = {
-			displayName: name
+			displayName: name,
+			uid: user.user.uid,
+			email:email
 		}
 		ref.set(obj)
 	}
@@ -175,7 +188,9 @@ RegisterScreen = () => {
 		}
 	};
 
-	useEffect(() => {}, []);
+	useEffect(() => {
+		console.log('register Screen')
+	}, []);
 
 	return (
 		<SafeAreaView style={[styles.container]}>

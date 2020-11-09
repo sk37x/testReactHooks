@@ -27,10 +27,10 @@ ForgotScreen = () => {
 				})
 				.catch(function (error) {
 					if (error.code === "auth/user-not-found") {
-						setErrorMessage("ไม่พบผู้ใช้งาน");
-					} else {
+						setErrorMessage("ไม่พบผู้ใช้งานในระบบ");
+					} else if (error.code === "auth/invalid-email") {
 						setErrorMessage("รูปแบบอีเมลไม่ถูกต้อง");
-					}
+					} 
 					// An error happened.
 				});
 		} catch (e) {

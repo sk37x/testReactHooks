@@ -23,6 +23,7 @@ import ButtonFixedBottom from "./ButtonFixedBottom"; // https://github.com/kohve
 import Modal from "modal-react-native-web";
 import OverlayScreen from "./OverlayScreen";
 import ProgressLoader from "rn-progress-loader";
+import OrderList from "./OrderList";
 
 OrderReport = () => {
 	const navigation = useNavigation();
@@ -31,16 +32,13 @@ OrderReport = () => {
 	const user = firebase.auth().currentUser;
 	const [data, setData] = useState(null);
 	const [isOrderData, setOrderData] = useState(null);
-	const orderData = JSON.parse(route.params.orderData);
+	// const orderData = route.params.orderData
+	// 	? JSON.parse(route.params.orderData)
+	// 	: {};
 
 	const [isVisibleLoading, setVisibleLoading] = useState(false);
 	const firebaseRef = firebase.database().ref();
 	const isFocused = useIsFocused();
-	const toSetData = (newData) =>
-		setData((state) => {
-			state = newData;
-			return state;
-		});
 	const itemShow = [
 		{ id: 1, name: "น้ำเปล่าขวดใหญ่", price: "20" },
 		{ id: 2, name: "Sponsor", price: "15" },
@@ -175,39 +173,58 @@ OrderReport = () => {
 		"ธันวาคม",
 	];
 	useEffect(() => {
-		if (!route.params.type) {
-			firebaseRef
-				.child("mybooks/" + user.uid)
-				.once("value")
-				.then((snapshot) => {
-					const date = new Date();
-					console.log(snapshot.val(), " snapshot.val() ");
-					// var obj = snapshot.val()[route.params.index];
-					// toSetData(obj);
-				});
-		} else {
-			if (route.params.type === "admin") {
-				let json = JSON.parse(route.params.orderData);
-				toSetData(json);
-			}
-		}
+		// if (!route.params.type) {
+		// 	firebaseRef
+		// 		.child("mybooks/" + user.uid)
+		// 		.once("value")
+		// 		.then((snapshot) => {
+		// 			const date = new Date();
 
+		// 			// console.log(snapshot.val(), " snapshot.val() ");
+		// 			var arr1 = Object.values(snapshot.val());
+		// 			var obj = arr1.find(({ orderId }) => orderId === route.params.index);
+		// 			snapshot.ref.parent.parent
+		// 				.child("court/")
+		// 				.once("value")
+		// 				.then((snap2) => {
+		// 					let arr = snap2.val();
+		// 					// console.log(arr);
+		// 					let obj2 = arr.find(({ _id }) => _id == obj.orderCourtId);
+		// 					// console.log(obj2)
+		// 					obj.imageUri = obj2.imageUri;
+		// 					setData(obj);
+		// 				});
+		// 		});
+		// } else {
+		// 	if (route.params.type === "admin") {
+		// 		let json = JSON.parse(route.params.orderData);
+		// 		setData(json);
+		// 	}
+		// }
+
+		let json = JSON.parse(route.params.orderData);
+		setData(json);
+		console.log("test")
 		return () => {
-			firebaseRef.off();
+			// OrderList;
+			// toSetData(null);
+			setData(null);
+			firebaseRef.off()
 		};
 	}, [isFocused]);
 
 	const itemRender = (jsonData) => {
+		// console.log(jsonData);
 		const dateSuccessOrder = jsonData ? new Date(jsonData.orderTime) : "";
 		return jsonData ? (
 			<View>
 				<Image
 					style={styleView.imageFullScreen}
-					source={{ uri: orderData.imageUri }}
+					source={{ uri: jsonData.imageUri }}
 				/>
 				<View style={{ marginBottom: 25 }}>
 					<Text style={styleView.styleTextTitle}>รายละเอียด</Text>
-					{showListComponent("สนาม", orderData.courtName)}
+					{showListComponent("สนาม", jsonData.courtName)}
 					{showListComponent(
 						"ช่วงเวลาที่จอง",
 						timer.find(({ value }) => value === jsonData.orderFieldTime).label
@@ -222,8 +239,10 @@ OrderReport = () => {
 					)}
 					{showListComponent(
 						"เวลาที่ทำรายการ",
+						(dateSuccessOrder.getHours().toString().length == 1 ? '0' : '') + 
 						dateSuccessOrder.getHours() +
-							" " +
+							" : " +
+							(dateSuccessOrder.getMinutes().toString().length == 1 ? '0' : '') +
 							dateSuccessOrder.getMinutes() +
 							" น."
 					)}
@@ -286,46 +305,55 @@ OrderReport = () => {
 			.child("mybooks/" + user.uid)
 			.once("value")
 			.then((snapshot) => {
-				const date = new Date();
-				var obj = snapshot.val()[route.params.index];
+				var arr1 = Object.values(snapshot.val());
+				var arr2 = Object.keys(snapshot.val());
+				var objIndex = arr1.findIndex(
+					({ orderId }) => orderId === route.params.index
+				);
+				var keys = arr2[objIndex];
+				// console.log(keys);
+				var obj = arr1.find(({ orderId }) => orderId === route.params.index);
+				// console.log(obj, " obj ##########");
+				let dateOrder = new Date(obj.orderTimeSel.toString());
+
 				// console.log(snapshot.ref.parent.child(user.uid+"/"+route.params.index), "###### ref");
-				var ref = "";
-				firebaseRef
-					.child("field/")
-					.once("value")
-					.then((snap) => {
-						let snapArr = snap.val();
-						var arr = [];
-						snapArr.map((val, index) => {
-							if (val.fieldId === obj.orderFieldId) {
-								arr.push(val);
-								ref += index + "/";
-							}
+				let refTest = "";
+				if (obj) {
+					snapshot.ref.parent.parent
+						.child("court/")
+						.once("value")
+						.then((snapCourt) => {
+							let courtArr = snapCourt.val();
+							let courtUse = courtArr.findIndex(
+								({ _id }) => _id === obj.orderCourtId
+							);
+							let timeUse = courtArr[courtUse].courtBook.findIndex(
+								({ date, month, year }) =>
+									date == dateOrder.getDate() &&
+									month == dateOrder.getMonth() &&
+									year == dateOrder.getFullYear()
+							);
+							let findTimer = courtArr[courtUse].courtBook[
+								timeUse
+							].timer.findIndex(({ value }) => value === obj.orderFieldTime);
+							let timerUse =
+								courtArr[courtUse].courtBook[timeUse].timer[findTimer];
+							refTest +=
+								courtUse + "/courtBook/" + timeUse + "/timer/" + findTimer;
+							// console.log(timerUse)
+							timerUse.booking = false;
+							snapCourt.child(refTest).ref.set(timerUse);
+							// console.log(timerUse, " timerUse ###################");
 						});
-						let orderDate = new Date(obj.orderTime);
-						let indexBook = arr[0].fieldBook.findIndex(
-							({ date, month, year }) =>
-								date == orderDate.getDate() &&
-								month == orderDate.getMonth() &&
-								year == orderDate.getFullYear()
-						);
-						let timer = [...arr[0].fieldBook[indexBook].timer];
-						let timerIndex = timer.findIndex(
-							({ value }) => value == obj.orderFieldTime
-						);
-						ref += "fieldBook/" + indexBook + "/timer/" + timerIndex;
-						let objTime = timer[timerIndex];
-						objTime.booking = false;
-						// console.log(!true)
-						// console.log(objTime)
-						snap.ref.child(ref).set(objTime, (result) => console.log(result));
-					});
-				snapshot.ref.child(route.params.index).remove();
+					// console.log(obj);
+					snapshot.child(keys).ref.remove();
+				}
+				// snapshot.child(route.params.index).ref.remove()
 			});
 
 		isLoading();
 		setTimeout(() => {
-			navigation.goBack();
+			navigation.navigate('orderDetail');
 		}, 3500);
 		return firebaseRef;
 	};
@@ -351,7 +379,7 @@ OrderReport = () => {
 				style={styleView.scrollContainer}
 				contentContainerStyle={styleView.scrollContentContainer}
 			>
-				<View>{itemRender(data)}</View>
+				<View>{data ? itemRender(data) : <Text />}</View>
 				<ProgressLoad />
 			</ScrollView>
 			{route.params.type ? (
@@ -360,7 +388,10 @@ OrderReport = () => {
 						color={"#721c24"}
 						backgroundcolor={"#f8d7da"}
 						borderColor={"#f5c6cb"}
-						onPress={() => findAndDeleteData()}
+						onPress={() => {
+							findAndDeleteData();
+
+						}}
 						text="ยกเลิกรายการ"
 					/>
 				) : (

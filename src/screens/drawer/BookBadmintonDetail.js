@@ -182,18 +182,20 @@ BookBadmintonDetail = () => {
 							.then((snap3) => {
 								let snap3Arr = snap3.val();
 								let timeArr = [];
-								if(snap3Arr) {
+								if (snap3Arr) {
 									snap3Arr.map((val, index) => {
 										if (!val.booking) {
+											val.key = index.toString();
+											console.log(val)
 											timeArr.push(val);
 										}
 									});
-									setTimeArray(state => {
+									setTimeArray((state) => {
 										state = timeArr;
-										return state
-									})
+										return state;
+									});
 								} else {
-									setTimeArray(state => null);
+									setTimeArray((state) => null);
 								}
 							});
 					});
@@ -217,7 +219,7 @@ BookBadmintonDetail = () => {
 	};
 	useEffect(() => {
 		const firebaseRef = firebase.database().ref();
-
+		console.log(isTimeArray);
 		var newArr = [];
 		firebaseRef
 			.child("field")
@@ -269,30 +271,37 @@ BookBadmintonDetail = () => {
 	};
 
 	const timeRange = () => {
+		console.log("useTimeRange")
 		let objTime = [
 			{
 				value: 1,
 				label: "16.00 - 17.00 น.",
+				key: 1
 			},
 			{
 				value: 2,
 				label: "17.00 - 18.00 น.",
+				key: 2
 			},
 			{
 				value: 3,
 				label: "18.00 - 19.00 น.",
+				key: 3
 			},
 			{
 				value: 4,
 				label: "19.00 - 20.00 น.",
+				key: 4
 			},
 			{
 				value: 5,
 				label: "20.00 - 21.00 น.",
+				key: 5
 			},
 			{
 				value: 6,
 				label: "21.00 - 22.00 น.",
+				key: 6
 			},
 		];
 
@@ -347,9 +356,15 @@ BookBadmintonDetail = () => {
 			},
 			{
 				booking: false,
-				label: "21.00 - 22.00 น.",
+				label: "20.00 - 21.00 น.",
 				value: 5,
 				key: 5,
+			},
+			{
+				booking: false,
+				label: "21.00 - 22.00 น.",
+				value: 6,
+				key: 6,
 			},
 		];
 		return obj;

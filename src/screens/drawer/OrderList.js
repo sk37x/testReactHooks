@@ -8,6 +8,8 @@ import {
 	ScrollView,
 	SafeAreaView,
 	Platform,
+	ActivityIndicator,
+
 } from "react-native";
 import { styles } from "../../css/style";
 import {
@@ -20,7 +22,7 @@ import firebase from "firebase";
 import { ListItem, Avatar } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale"; // https://github.com/kohver/react-native-touchable-scale
 
-OrderDetail = () => {
+OrderList = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
 	const index = useNavigationState((state) => state.index);
@@ -40,29 +42,28 @@ OrderDetail = () => {
 			.child("mybooks/" + user.uid)
 			.orderByChild("orderTimeSel")
 			.once("value");
-
-		let orderArray = orderRef.val();
-
-		let courtRef = await firebaseRef.child("court/").once("value");
-		let courtArray = courtRef.val();
-		var arr = [];
-		// console.log(orderArray);
-		if (orderArray) {
-			await orderArray.map((val, index) => {
-				let courtObj = courtArray.find(({ _id }) => _id === val.orderCourtId);
-				val.courtName = courtObj.name;
-				val.index = index;
-				val.imageUri = courtObj.imageUri;
-				let date = new Date();
-				let orderTimeSel = new Date(val.orderTimeSel);
-				if (date.getTime() < orderTimeSel.getTime()) {
-					arr.push(val);
-				}
-			});
-			if(arr.length > 0) {
-				toSetData(arr);
+		if (orderRef.val() !== null) {
+			let orderArray = Object.values(orderRef.val());
+			// console.log(orderArray);
+			let courtRef = await firebaseRef.child("court/").once("value");
+			let courtArray = Object.values(courtRef.val());
+			var arr = [];
+			// console.log(orderArray);
+			if (orderArray) {
+				orderArray.map((val, index) => {
+					let courtObj = courtArray.find(({ _id }) => _id === val.orderCourtId);
+					val.courtName = courtObj.name;
+					val.index = index;
+					val.imageUri = courtObj.imageUri;
+					let date = new Date();
+					let orderTimeSel = new Date(val.orderTimeSel.toString());
+					if (date.getTime() <= orderTimeSel.getTime()) {
+						arr.push(val);
+					}
+				});
 			}
 		}
+		return arr;
 
 		// firebaseRef
 		// 	.child("mybooks/" + user.uid)
@@ -86,10 +87,19 @@ OrderDetail = () => {
 		// fetch("https://jsonplaceholder.typicode.com/todos/1")
 		// 	.then((response) => response.json())
 		// 	.then((json) => toSetData(json));
-		findOrder();
+		
+		findOrder().then((snap) => {
+			toSetData(snap);
+		});
+		console.log("order list")
 		return () => {
-			findOrder();
 			firebaseRef.off();
+			// setData(null);
+			// a.then();
+			// findOrder().then();
+			setData(null);
+			showListOrder(data)
+			findOrder();
 		};
 	}, [isFocused]);
 
@@ -140,7 +150,7 @@ OrderDetail = () => {
 		"ธันวาคม",
 	];
 	const showListOrder = (jsonList) => {
-		console.log(jsonList)
+		// console.log(jsonList)
 		return jsonList ? (
 			<FlatList
 				ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
@@ -160,7 +170,7 @@ OrderDetail = () => {
 							onPress={() =>
 								navigation.navigate("orderReport", {
 									name: "รายละเอียดการจองสนาม",
-									index: item.index,
+									index: item.orderId,
 									orderData: JSON.stringify(item),
 								})
 							}
@@ -209,7 +219,7 @@ OrderDetail = () => {
 				android: styles.containerNotCenter,
 			})}
 		>
-			{showListOrder(data)}
+			{data ? showListOrder(data) : <ActivityIndicator size="large" />}
 		</SafeAreaView>
 	);
 
@@ -231,4 +241,4 @@ const styleView = StyleSheet.create({
 	},
 });
 
-export default OrderDetail;
+export default OrderList;

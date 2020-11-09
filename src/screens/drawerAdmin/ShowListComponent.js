@@ -36,66 +36,68 @@ ShowListComponent = (props) => {
 	useEffect(() => {
 		// console.log(route.params.type);
 		// props.isLoading();
-		
-		if (route.params.type === "court") {
-			firebaseRef
-				.child(route.params.type + "/")
-				.once("value")
-				.then((snapshot) => {
-					if (snapshot.val() !== null) {
-						// console.log("inSnap");
-						let arr = [...snapshot.val()];
-						console.log(arr);
-						arr.map((val, index) => {
-							val.index = index;
-						});
-						// console.log(arr);
-						toSetDataList(arr);
-					}
-				});
-		} else if (route.params.type === "timer") {
-			let initialData = [
-				{
-					_id: 1,
-					label: "16.00 - 17.00 น.",
-					status: false,
-				},
-				{
-					_id: 2,
-					label: "17.00 - 18.00 น.",
-					status: false,
-				},
-				{
-					_id: 3,
-					label: "18.00 - 19.00 น.",
-					status: false,
-				},
-				{
-					_id: 4,
-					label: "19.00 - 20.00 น.",
-					status: false,
-				},
-				{
-					_id: 5,
-					label: "21.00 - 22.00 น.",
-					status: false,
-				},
-			];
-			firebaseRef
-				.child("timer")
-				.once("value")
-				.then(async (snapshot) => {
-					if (snapshot.val() === null) {
-						await snapshot.ref.set(initialData);
-						snapshot.ref.once("value").then((snap2) => {
-							console.log(snap2.val());
-						});
-						// console.log(snapshot.val());
-					} else {
-						let newObj = snapshot.val();
-						toSetDataList(newObj);
-					}
-				});
+
+		if (route.params) {
+			if (route.params.type === "court") {
+				firebaseRef
+					.child(route.params.type + "/")
+					.once("value")
+					.then((snapshot) => {
+						if (snapshot.val() !== null) {
+							// console.log("inSnap");
+							let arr = [...snapshot.val()];
+							console.log(arr);
+							arr.map((val, index) => {
+								val.index = index;
+							});
+							// console.log(arr);
+							toSetDataList(arr);
+						}
+					});
+			} else if (route.params.type === "timer") {
+				let initialData = [
+					{
+						_id: 1,
+						label: "16.00 - 17.00 น.",
+						status: false,
+					},
+					{
+						_id: 2,
+						label: "17.00 - 18.00 น.",
+						status: false,
+					},
+					{
+						_id: 3,
+						label: "18.00 - 19.00 น.",
+						status: false,
+					},
+					{
+						_id: 4,
+						label: "19.00 - 20.00 น.",
+						status: false,
+					},
+					{
+						_id: 5,
+						label: "21.00 - 22.00 น.",
+						status: false,
+					},
+				];
+				firebaseRef
+					.child("timer")
+					.once("value")
+					.then(async (snapshot) => {
+						if (snapshot.val() === null) {
+							await snapshot.ref.set(initialData);
+							snapshot.ref.once("value").then((snap2) => {
+								console.log(snap2.val());
+							});
+							// console.log(snapshot.val());
+						} else {
+							let newObj = snapshot.val();
+							toSetDataList(newObj);
+						}
+					});
+			}
 		}
 
 		return () => {

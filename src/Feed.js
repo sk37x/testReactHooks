@@ -23,8 +23,7 @@ import axios from "axios";
 import { Icon } from "react-native-elements";
 import ViewContent from "./ViewContent";
 import { set } from "react-native-reanimated";
-import Toast from "react-native-toast-message";
-
+import RNHTMLtoPDF from 'react-native-html-to-pdf'
 // clear Timeout Android
 const _setTimeout = global.setTimeout;
 const _clearTimeout = global.clearTimeout;
@@ -93,16 +92,36 @@ const supportURL = async () => {
 Feed = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
-	
+
 	const user = firebase.auth().currentUser;
 	const firebaseDB = firebase.database();
 	// const viewElement = useRef(null);
 
-	useEffect(() => {
-	}, []);
+	const createPDF = async () => {
+		let options = {
+			html: "<h1>PDF TEST</h1>",
+			fileName: "test",
+			directory: "Documents",
+		};
+		
+		let file = await RNHTMLtoPDF.convert(options);
+		console.log(file)
+		// console.log(file.filePath);
+		alert(file.filePath);
+	};
+
+	const createTest = () => {
+		var printWindow = window.open('', '', 'height=700,width=1200,scrollbars=1');
+		Linking.openURL(printWindow)
+		printWindow.document.write("TEST");
+		
+	}
+
+	useEffect(() => {}, []);
 	return (
 		<View>
 			<ScrollView contentContainerStyle={styleView.scrollContentContainer}>
+	
 				{/* <Text>สวัสดี คุณ {route.params.user.displayName}</Text> */}
 				{/* <TestComp item={listOrder} />
 				<Button title="testDB" onPress={() => testDB()} /> */}
@@ -308,7 +327,6 @@ Feed = () => {
 };
 */
 export default Feed;
-
 
 /*
 const setInitData = (date) => {
