@@ -30,6 +30,9 @@ OrderReport = () => {
 	const index = useNavigationState((state) => state.index);
 	const user = firebase.auth().currentUser;
 	const [data, setData] = useState(null);
+	const [isOrderData, setOrderData] = useState(null);
+	const orderData = JSON.parse(route.params.orderData);
+
 	const [isVisibleLoading, setVisibleLoading] = useState(false);
 	const firebaseRef = firebase.database().ref();
 	const isFocused = useIsFocused();
@@ -172,14 +175,23 @@ OrderReport = () => {
 		"ธันวาคม",
 	];
 	useEffect(() => {
-		firebaseRef
-			.child("mybooks/" + user.uid)
-			.once("value")
-			.then((snapshot) => {
-				const date = new Date();
-				var obj = snapshot.val()[route.params.index];
-				toSetData(obj);
-			});
+		if (!route.params.type) {
+			firebaseRef
+				.child("mybooks/" + user.uid)
+				.once("value")
+				.then((snapshot) => {
+					const date = new Date();
+					console.log(snapshot.val(), " snapshot.val() ");
+					// var obj = snapshot.val()[route.params.index];
+					// toSetData(obj);
+				});
+		} else {
+			if (route.params.type === "admin") {
+				let json = JSON.parse(route.params.orderData);
+				toSetData(json);
+			}
+		}
+
 		return () => {
 			firebaseRef.off();
 		};
@@ -191,14 +203,11 @@ OrderReport = () => {
 			<View>
 				<Image
 					style={styleView.imageFullScreen}
-					source={DATA.find(({ key }) => key === jsonData.orderFieldId).url}
+					source={{ uri: orderData.imageUri }}
 				/>
 				<View style={{ marginBottom: 25 }}>
 					<Text style={styleView.styleTextTitle}>รายละเอียด</Text>
-					{showListComponent(
-						"สนามที่",
-						DATA.find(({ key }) => key === jsonData.orderFieldId).key
-					)}
+					{showListComponent("สนาม", orderData.courtName)}
 					{showListComponent(
 						"ช่วงเวลาที่จอง",
 						timer.find(({ value }) => value === jsonData.orderFieldTime).label
@@ -258,7 +267,7 @@ OrderReport = () => {
 										}}
 									>
 										<Text style={styleView.styleTextParaGraph}>
-											{v.price} ฿
+											{v.price}.- ฿
 										</Text>
 									</View>
 								</View>
@@ -306,14 +315,14 @@ OrderReport = () => {
 						);
 						ref += "fieldBook/" + indexBook + "/timer/" + timerIndex;
 						let objTime = timer[timerIndex];
-						objTime.booking = false
+						objTime.booking = false;
 						// console.log(!true)
 						// console.log(objTime)
 						snap.ref.child(ref).set(objTime, (result) => console.log(result));
 					});
-					snapshot.ref.child(route.params.index).remove()
+				snapshot.ref.child(route.params.index).remove();
 			});
-			
+
 		isLoading();
 		setTimeout(() => {
 			navigation.goBack();
@@ -345,13 +354,27 @@ OrderReport = () => {
 				<View>{itemRender(data)}</View>
 				<ProgressLoad />
 			</ScrollView>
-			<ButtonFixedBottom
-				color={"#721c24"}
-				backgroundcolor={"#f8d7da"}
-				borderColor={"#f5c6cb"}
-				onPress={() => findAndDeleteData()}
-				text="ยกเลิกรายการ"
-			/>
+			{route.params.type ? (
+				route.params.type != "admin" ? (
+					<ButtonFixedBottom
+						color={"#721c24"}
+						backgroundcolor={"#f8d7da"}
+						borderColor={"#f5c6cb"}
+						onPress={() => findAndDeleteData()}
+						text="ยกเลิกรายการ"
+					/>
+				) : (
+					<View />
+				)
+			) : (
+				<ButtonFixedBottom
+					color={"#721c24"}
+					backgroundcolor={"#f8d7da"}
+					borderColor={"#f5c6cb"}
+					onPress={() => findAndDeleteData()}
+					text="ยกเลิกรายการ"
+				/>
+			)}
 		</SafeAreaView>
 	);
 };

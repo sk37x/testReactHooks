@@ -12,7 +12,11 @@ import {
 	Platform,
 	ScrollView,
 } from "react-native";
-import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
+import {
+	useIsFocused,
+	useNavigation,
+	useRoute,
+} from "@react-navigation/native";
 import { styles } from "../../css/style";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import RNPickerSelect, { defaultStyles } from "react-native-picker-select";
@@ -28,23 +32,62 @@ BookBadmintonDetail = () => {
 	const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 	const [isDateSelected, setDateSelected] = useState("");
 	const [isDateSel, setDateSel] = useState("");
-
+	const [isTimeArray, setTimeArray] = useState(null);
 	const [isTimeSel, setTimeSel] = useState(undefined);
 	const [isVisible, setVisible] = useState(false);
 	const [dataSave, setDataSave] = useState({});
-	const [isDataArr, setDataArr] = useState(null)
+	const [isDataArr, setDataArr] = useState(null);
 	const isFocused = useIsFocused();
 	const firebaseRef = firebase.database().ref();
 	const user = firebase.auth().currentUser;
+	const insertDatetime = (date) => {
+		let fieldBook = {
+			month: date.getMonth(),
+			date: date.getDate(),
+			year: date.getFullYear(),
 
-	
+			timer: [
+				{
+					value: 1,
+					label: "16.00 - 17.00 น.",
+					booking: false,
+				},
+				{
+					value: 2,
+					label: "17.00 - 18.00 น.",
+					booking: false,
+				},
+				{
+					value: 3,
+					label: "18.00 - 19.00 น.",
+					booking: false,
+				},
+				{
+					value: 4,
+					label: "19.00 - 20.00 น.",
+					booking: false,
+				},
+				{
+					value: 5,
+					label: "20.00 - 21.00 น.",
+					booking: false,
+				},
+				{
+					value: 6,
+					label: "21.00 - 22.00 น.",
+					booking: false,
+				},
+			],
+		};
+		return fieldBook;
+	};
+
 	const isLoading = () => {
 		setVisible(true);
 		setTimeout(() => {
 			setVisible(false);
 		}, 2000);
-	}
-	
+	};
 
 	const showDatePicker = () => {
 		setDatePickerVisibility(true);
@@ -111,6 +154,50 @@ BookBadmintonDetail = () => {
 				value: 5,
 			},
 		];
+
+		let date2 = date;
+		var arrTime = [];
+		firebaseRef
+			.child("court/")
+			.once("value")
+			.then((snap) => {
+				let snapArr = snap.val();
+				let refIndex = snapArr.findIndex(
+					({ _id }) => _id === route.params.court
+				);
+				snap
+					.child(refIndex + "/courtBook/")
+					.ref.once("value")
+					.then((snap2) => {
+						var snap2Arr = snap2.val();
+						var snap2Index = snap2Arr.findIndex(
+							({ date, month, year }) =>
+								date == date2.getDate() &&
+								month == date2.getMonth() &&
+								year == date2.getFullYear()
+						);
+						snap2
+							.child(snap2Index + "/timer/")
+							.ref.once("value")
+							.then((snap3) => {
+								let snap3Arr = snap3.val();
+								let timeArr = [];
+								if(snap3Arr) {
+									snap3Arr.map((val, index) => {
+										if (!val.booking) {
+											timeArr.push(val);
+										}
+									});
+									setTimeArray(state => {
+										state = timeArr;
+										return state
+									})
+								} else {
+									setTimeArray(state => null);
+								}
+							});
+					});
+			});
 	};
 
 	const ProgressLoad = () => (
@@ -129,8 +216,9 @@ BookBadmintonDetail = () => {
 		});
 	};
 	useEffect(() => {
-		var newArr = [];
 		const firebaseRef = firebase.database().ref();
+
+		var newArr = [];
 		firebaseRef
 			.child("field")
 			.once("value")
@@ -158,12 +246,14 @@ BookBadmintonDetail = () => {
 						// console.log(objBook, "objBook");
 					} else {
 						let setData = insertDatetime(new Date());
-						snapshot.ref.child(index + "/fieldBook/" + val.fieldBook.length).set(setData)
+						snapshot.ref
+							.child(index + "/fieldBook/" + val.fieldBook.length)
+							.set(setData);
 						obj.fieldId = val.fieldId;
 						obj.fieldName = val.fieldName;
 						obj.fieldBook = setData;
 						obj.name = "Tab" + index;
-						console.log(obj)
+						// console.log(obj);
 						newArr.push(obj);
 					}
 				});
@@ -178,28 +268,36 @@ BookBadmintonDetail = () => {
 		selectTime: null,
 	};
 
-	const timeRange = [
-		{
-			value: 1,
-			label: "16.00 - 17.00 น.",
-		},
-		{
-			value: 2,
-			label: "17.00 - 18.00 น.",
-		},
-		{
-			value: 3,
-			label: "18.00 - 19.00 น.",
-		},
-		{
-			value: 4,
-			label: "19.00 - 20.00 น.",
-		},
-		{
-			value: 5,
-			label: "21.00 - 22.00 น.",
-		},
-	];
+	const timeRange = () => {
+		let objTime = [
+			{
+				value: 1,
+				label: "16.00 - 17.00 น.",
+			},
+			{
+				value: 2,
+				label: "17.00 - 18.00 น.",
+			},
+			{
+				value: 3,
+				label: "18.00 - 19.00 น.",
+			},
+			{
+				value: 4,
+				label: "19.00 - 20.00 น.",
+			},
+			{
+				value: 5,
+				label: "20.00 - 21.00 น.",
+			},
+			{
+				value: 6,
+				label: "21.00 - 22.00 น.",
+			},
+		];
+
+		return objTime;
+	};
 	const placeholder = {
 		label: "เลื่อกช่วงเวลา",
 		value: null,
@@ -261,51 +359,50 @@ BookBadmintonDetail = () => {
 		{
 			value: 1,
 			label: "16.00 - 17.00 น.",
-			hours : '17',
-			minute : '01',
-			secound: '01'
+			hours: "17",
+			minute: "01",
+			secound: "01",
 		},
 		{
 			value: 2,
 			label: "17.00 - 18.00 น.",
-			hours : '18',
-			minute : '01',
-			secound: '01'
+			hours: "18",
+			minute: "01",
+			secound: "01",
 		},
 		{
 			value: 3,
 			label: "18.00 - 19.00 น.",
-			hours : '19',
-			minute : '01',
-			secound: '01'
+			hours: "19",
+			minute: "01",
+			secound: "01",
 		},
 		{
 			value: 4,
 			label: "19.00 - 20.00 น.",
-			hours : '20',
-			minute : '01',
-			secound: '01'
+			hours: "20",
+			minute: "01",
+			secound: "01",
 		},
 		{
 			value: 5,
 			label: "20.00 - 21.00 น.",
-			hours : '21',
-			minute : '01',
-			secound: '01'
+			hours: "21",
+			minute: "01",
+			secound: "01",
 		},
 		{
 			value: 5,
 			label: "21.00 - 22.00 น.",
-			hours : '22',
-			minute : '01',
-			secound: '01'
-		}
-	]
-	
-	
+			hours: "22",
+			minute: "01",
+			secound: "01",
+		},
+	];
+
 	const firebaseDB = () => {
-		console.log(isTimeSel);
-		console.log(isDateSel);
+		// console.log(isTimeSel);
+		// console.log(isDateSel);
 		let pathUpdate = "books";
 		let date = new Date();
 		let initData = setInitData(isDateSel.length > 0 ? isDateSel : date);
@@ -314,8 +411,8 @@ BookBadmintonDetail = () => {
 			.child("books")
 			.once("value")
 			.then((value) => {
-				console.log(value.child());
-				console.log(value.val());
+				// console.log(value.child());
+				// console.log(value.val());
 				/*
 				let parentData = [...value.val()];
 				for (let i = 0; i < parentData.length; i++) {
@@ -374,8 +471,7 @@ BookBadmintonDetail = () => {
 					booking: false,
 				},
 			],
-		}
-
+		};
 
 		// firebase
 		// 	.database()
@@ -435,7 +531,7 @@ BookBadmintonDetail = () => {
 				</Text>
 				<Image
 					style={{ width: "100%", height: 250 }}
-					source={route.params.image}
+					source={{ uri: route.params.image }}
 				/>
 				<Text></Text>
 				<Button
@@ -461,11 +557,15 @@ BookBadmintonDetail = () => {
 						<Text>ช่วงเวลา</Text>
 						<RNPickerSelect
 							placeholder={placeholder}
-							items={timeRange}
+							items={isTimeArray ? isTimeArray : timeRange()}
 							onValueChange={(value) => {
 								if (value) {
-									let objTime = timer.find(({value}) => value == value);
-									let setTime = [objTime.hours, objTime.minute, objTime.secound]
+									let objTime = timer.find(({ value }) => value == value);
+									let setTime = [
+										objTime.hours,
+										objTime.minute,
+										objTime.secound,
+									];
 									let dateSel = new Date(isDateSel);
 									dateSel.setHours(...setTime);
 									setDateSel(dateSel);
@@ -508,7 +608,7 @@ BookBadmintonDetail = () => {
 								name: "จองสนาม",
 								date: isDateSel.toString(),
 								time: isTimeSel,
-								cord: route.params.cord,
+								court: route.params.court,
 							})
 						}
 					>

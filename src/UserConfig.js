@@ -17,6 +17,7 @@ import {
 	useNavigation,
 	useRoute,
 	useIsFocused,
+	useNavigationState,
 } from "@react-navigation/native";
 import LoginScreen from "./LoginScreen";
 import {
@@ -98,6 +99,7 @@ const title = (
 UserConfig = (props) => {
 	const navigation = useNavigation();
 	const route = useRoute();
+	const index = useNavigationState((state) => state.index);
 	const isFocused = useIsFocused();
 	const ref = useRef(null);
 	const firebaseRef = firebase.database().ref();
@@ -191,10 +193,9 @@ UserConfig = (props) => {
 							.catch((err) => {
 								console.log(err);
 							});
-	
+
 						updateRealTimeDB(user.uid);
 					}
-	
 				}
 			} else if (hasPermission != "granted") {
 				alert("ไม่สามารถเข้าถึงคลังภาพได้");
@@ -260,7 +261,11 @@ UserConfig = (props) => {
 	};
 
 	useEffect(() => {
-		console.log(route.params);
+		console.log(index);
+		let unsubscribe = navigation.addListener("focus", (e) => {
+			console.log(e);
+			return false;
+		});
 
 		firebaseRef
 			.child("users/" + user.uid)
@@ -271,7 +276,10 @@ UserConfig = (props) => {
 			});
 
 		PermissionCheck();
-		return () => PermissionCheck();
+		return () => {
+			PermissionCheck();
+			unsubscribe;
+		};
 	}, [isFocused]);
 
 	return (

@@ -57,21 +57,16 @@ BookBadminton = () => {
 	const user = firebase.auth().currentUser;
 	const firebaseRef = firebase.database().ref();
 	const isFocused = useIsFocused();
-	const [dataCord, setDataCord] = useState(null);
+	const [isDataCourt, setDataCourt] = useState(null);
 
 	const toSetArray = (newData) => {
-		setDataCord((state) => {
+		setDataCourt((state) => {
 			state = newData;
 			return state;
 		});
 	};
 
-	const Item = ({ item, onPress, style }) => (
-		<TouchableOpacity onPress={onPress} style={[styles.item, style]}>
-			<Image style={{ width: "100%", height: 200 }} source={item.url} />
-			<Text style={styles.title}>{item.title}</Text>
-		</TouchableOpacity>
-	);
+
 	const fetchData = () => {
 		let arrToSet = [];
 		firebaseRef.child('field/').on('value', (snapshot) => {
@@ -84,32 +79,47 @@ BookBadminton = () => {
 				obj.url = DATA[index].url;
 				arrToSet.push(obj)
 			})
-			console.log(arrToSet);
-			toSetArray(arrToSet)
+			// toSetArray(snapshot.val())
 		})
 	}
 	
 
+	
+
 	useEffect(() => {
 		let a = fetchData();
+
+		firebaseRef.child('court/').once('value').then((snapshot) => {
+			let snapArr = snapshot.val();
+			// snapArr.map((val, index) => val.key = index)
+			setDataCourt(snapArr)
+		})
 		return () => {
 			firebaseRef.off();
 		}
 	}, [isFocused])
-	console.log(dataCord);
-
-	const renderItem = ({ item }) => {
+	
+	const Item = ({ item, onPress, style }) => {
+		return (
+		
+		<TouchableOpacity onPress={onPress} style={[styles.item, style]}>
+			<Image style={{ width: "100%", height: 200, borderRadius: 50 }} source={{uri:item.imageUri}} />
+			<Text style={styles.title}>{item.name}</Text>
+		</TouchableOpacity>
+	)};
+	
+	renderItem = ({ item }) => {
 		const backgroundColor = item.id === selectedId ? "white" : "white";
-		console.log(item)
+		// console.log(item)
 		return (
 			<Item
 				item={item}
 				onPress={() =>
 					navigation.navigate("BookBadmintonDetail", {
-						name: item.title,
-						image: item.url,
-						user: route.params.user,
-						cord: item.key,
+						name: item.name,
+						image: item.imageUri,
+						// user: route.params.user,
+						court: item._id,
 
 					})
 				}
@@ -121,8 +131,8 @@ BookBadminton = () => {
 	return (
 		<SafeAreaView style={styles.container}>
 			<FlatList
-				data={DATA}
-				renderItem={renderItem}
+				data={isDataCourt}
+				renderItem={this.renderItem}
 				keyExtractor={(item, index) => index.toString()}
 				extraData={selectedId}
 			/>
@@ -139,9 +149,12 @@ const styles = StyleSheet.create({
 		// padding: 20,
 		marginVertical: 8,
 		marginHorizontal: 16,
+		alignItems: 'center'
 	},
 	title: {
-		fontSize: 20,
+		fontSize: 27,
+		fontFamily: 'thSarabunNew'
+
 	},
 });
 

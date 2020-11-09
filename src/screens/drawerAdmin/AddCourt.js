@@ -7,7 +7,10 @@ import {
 	TouchableOpacity,
 	Image,
 	Dimensions,
+	SafeAreaView,
+	ScrollView,
 } from "react-native";
+import ButtonFixedBottomDeleteCourt from "./ButtonFixedBottomDeleteCourt";
 import { Icon, Input } from "react-native-elements";
 import { styles } from "../../css/styleAdmin";
 import {
@@ -18,6 +21,7 @@ import {
 } from "@react-navigation/native";
 import firebase from "firebase";
 import CustomActionSheet from "./CustomActionSheet";
+import ProgressLoader from "rn-progress-loader";
 // import Analytics from 'expo-firebase-analytics'
 
 // var admin = require('firebase-admin')
@@ -31,6 +35,8 @@ AddCourt = (props) => {
 	const firebaseRef = firebase.database().ref();
 
 	const [isImageUri, setImageUri] = useState("");
+	const [isNameCourt, setNameCourt] = useState("");
+	const [isVisible, setVisible] = useState(false);
 
 	const showActionSheet = () => actionSheet.show();
 
@@ -38,55 +44,102 @@ AddCourt = (props) => {
 		console.log("func Test");
 	};
 
-	const { imageUri, name } = props.data;
+	const ProgressLoad = () => (
+		<ProgressLoader
+			visible={isVisible}
+			isModal={true}
+			isHUD={true}
+			hudColor={"#000000"}
+			color={"#FFFFFF"}
+		/>
+	);
+	const isLoading = (nav) => {
+		setVisible(true);
+		setTimeout(() => {
+			setVisible(false);
+			nav.goBack();
+		}, 2000);
+	};
+	deleteDBCourt = async () => {
+		let courtArr = await firebaseRef.child("court/").once("value");
+		let list = courtArr.val();
+		let indexDelete = courtArr
+			.val()
+			.findIndex(({ _id }) => _id == props.data._id);
+		console.log(list.length);
+		list.splice(indexDelete, indexDelete);
+		console.log(list.length);
+	};
+
+	// const { imageUri, name } = props.data;
 	useEffect(() => {
-		// let a = admin.auth().getUser('yoUjtrb6nXWCstJH2XUZcsi1b6N2')
-		// console.log(a, 'a')
+		if (props.data) {
+			let { name, imageUri } = props.data;
+			setNameCourt(name);
+			setImageUri(imageUri);
+		}
 	}, [isFocused]);
 
 	return (
-		<View style={styles.container}>
-			<Text style={[styles.title, { marginBottom: 9 }]}>รูปภาพสนาม</Text>
-			{isImageUri.length === 0 ? (
-				<Icon
-					type={"font-awesome"}
-					name={"picture-o"}
-					size={256}
-					onPress={() => showActionSheet()}
-					containerStyle={{ marginBottom: 13 }}
+		<SafeAreaView style={{ flex: 1 }}>
+			<ScrollView contentContainerStyle={{ marginHorizontal: 15 }}>
+				<Text style={[styles.title, { marginBottom: 9 }]}>รูปภาพสนาม</Text>
+				{isImageUri.length === 0 ? (
+					<Icon
+						type={"font-awesome"}
+						name={"picture-o"}
+						size={256}
+						onPress={() => showActionSheet()}
+						containerStyle={{ marginBottom: 13 }}
+					/>
+				) : (
+					<TouchableOpacity
+						onPress={() => showActionSheet()}
+						style={{ alignItems: "center" }}
+					>
+						<Image
+							source={{ uri: props.data.imageUri }}
+							style={{
+								width: Dimensions.get("window").width - 100,
+								height: 200,
+								borderRadius: 20,
+							}}
+						/>
+					</TouchableOpacity>
+				)}
+
+				<Text style={[styles.title, { marginBottom: 9 }]}>ชื่อสนาม</Text>
+				<Input
+					onChangeText={(value) => {
+						let obj = { name: value };
+						props.funcSet(props.funcSetState, obj);
+						// props.funcSet
+					}}
+					defaultValue={isNameCourt}
+					style={{ fontFamily: "thSarabunNew", fontSize: 22 }}
+				/>
+				{props.componentLoad()}
+				<CustomActionSheet
+					funcSet={props.funcSet}
+					funcSetState={props.funcSetState}
+					data={props.data}
+					setImageUri={setImageUri}
+				/>
+			</ScrollView>
+			{route.params.type === "edit" ? (
+				<ButtonFixedBottomDeleteCourt
+					color={"#721c24"}
+					backgroundcolor={"#f8d7da"}
+					borderColor={"#f5c6cb"}
+					onPress={() => this.deleteDBCourt()}
+					text="ลบสนาม"
+					courtName={isNameCourt ? isNameCourt : ""}
 				/>
 			) : (
-				<TouchableOpacity
-					onPress={() => showActionSheet()}
-					style={{ alignItems: "center" }}
-				>
-					<Image
-						source={{ uri: props.data.imageUri }}
-						style={{
-							width: Dimensions.get("window").width - 100,
-							height: 200,
-							borderRadius: 20,
-						}}
-					/>
-				</TouchableOpacity>
+				<View />
 			)}
-
-			<Text style={[styles.title, { marginBottom: 9 }]}>ชื่อสนาม</Text>
-			<Input
-				onChangeText={(value) => {
-					let obj = { name: value };
-					props.funcSet(props.funcSetState, obj);
-					// props.funcSet
-				}}
-			/>
-			{props.componentLoad()}
-			<CustomActionSheet
-				funcSet={props.funcSet}
-				funcSetState={props.funcSetState}
-				data={props.data}
-				setImageUri={setImageUri}
-			/>
-		</View>
+			{ProgressLoad()}
+		</SafeAreaView>
 	);
 };
 

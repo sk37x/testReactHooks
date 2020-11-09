@@ -87,13 +87,17 @@ AdminDrawer = () => {
 				options={{ title: "สนามแบตมินตัน" }}
 				initialParams={{type:"court"}}
 			/>
+			{/* <Drawer.Screen
+				name="showListTimer"
+				children={() => {
+					return <ShowListComponent componentLoad={ProgressLoad} />
+				}}
+				options={{ title: "เวลาจอง" }}
+				initialParams={{type:"timer"}}
+			/> */}
+			<Drawer.Screen name="listUser" component={UserList} options={{title:'ผู้ใช้งานทั้งหมด'}} />
 			<Drawer.Screen name="checkListTable" component={TopTabCordViewAdmin} options={{title:'ตารางการใช้สนาม'}} />
 			<Drawer.Screen name="กฎเกณฑ์การใช้สนาม" component={RuleScreen} />
-			<Drawer.Screen
-				name="#### ทดสอบระบบ ####"
-				component={Detail}
-				initialParams={{ screenName: "Detail" }}
-			/>
 		</Drawer.Navigator>
 	);
 };

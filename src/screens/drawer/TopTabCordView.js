@@ -35,7 +35,7 @@ TopTabCordView = () => {
 		});
 	};
 	const insertDatetime = (date) => {
-		let fieldBook = {
+		let courtBook = {
 			month: date.getMonth(),
 			date: date.getDate(),
 			year: date.getFullYear(),
@@ -73,44 +73,60 @@ TopTabCordView = () => {
 				},
 			],
 		};
-		return fieldBook;
+		return courtBook;
 	};
 	useEffect(() => {
 		var newArr = [];
 		const firebaseRef = firebase.database().ref();
 		firebaseRef
-			.child("field")
+			.child("court/")
 			.once("value")
 			.then((snapshot) => {
 				let snapArr = [...snapshot.val()];
 				var toDayDate = new Date();
 				snapArr.map((val, index) => {
+					// if (val.courtBook) console.log(val);
 					let obj = {};
-					let findToDay = val.fieldBook.findIndex(
-						({ date, month, year }) =>
-							date == toDayDate.getDate() &&
-							month == toDayDate.getMonth() &&
-							year == toDayDate.getFullYear()
-					);
+					if (val.courtBook) {
+						let findToDay = val.courtBook.findIndex(
+							({ date, month, year }) =>
+								date == toDayDate.getDate() &&
+								month == toDayDate.getMonth() &&
+								year == toDayDate.getFullYear()
+						);
 
-					// console.log(val.fieldBook.length)
-					let objBook = val.fieldBook[findToDay];
-					if (objBook) {
-						obj.fieldId = val.fieldId;
-						obj.fieldName = val.fieldName;
-						obj.fieldBook = objBook;
-						obj.name = "Tab" + index;
-						newArr.push(obj);
-						toSetArray(newArr);
-						// console.log(objBook, "objBook");
+						// console.log(val.courtBook.length)
+						let objBook = val.courtBook[findToDay];
+						if (objBook) {
+							obj._id = val._id;
+							obj.courtName = val.name;
+							obj.courtBook = objBook;
+							obj.name = "Tab" + index;
+							newArr.push(obj);
+							toSetArray(newArr);
+							// console.log(objBook, "objBook");
+						} else {
+							let setData = insertDatetime(new Date());
+							snapshot.ref
+								.child(index + "/courtBook/" + val.courtBook.length)
+								.set(setData);
+							obj._id = val._id;
+							obj.courtName = val.courtName;
+							obj.courtBook = setData;
+							obj.name = "Tab" + index;
+							console.log(obj);
+							newArr.push(obj);
+						}
 					} else {
 						let setData = insertDatetime(new Date());
-						snapshot.ref.child(index + "/fieldBook/" + val.fieldBook.length).set(setData)
-						obj.fieldId = val.fieldId;
-						obj.fieldName = val.fieldName;
-						obj.fieldBook = setData;
+						snapshot.ref
+							.child(index + "/courtBook/0")
+							.set(setData);
+						obj._id = val._id;
+						obj.courtName = val.courtName;
+						obj.courtBook = setData;
 						obj.name = "Tab" + index;
-						console.log(obj)
+						console.log(obj);
 						newArr.push(obj);
 					}
 				});
@@ -139,12 +155,13 @@ TopTabCordView = () => {
 		<MaterialTopTabs.Navigator>
 			{isDataArr ? (
 				isDataArr.map((value, index) => {
+					console.log(value.courtBook.timer);
 					return (
 						<MaterialTopTabs.Screen
 							name={value.name}
 							children={CordView}
-							options={{ title: value.fieldName }}
-							initialParams={{ timeArr: value.fieldBook.timer }}
+							options={{ title: value.courtName }}
+							initialParams={{ timeArr: value.courtBook.timer }}
 							key={index}
 						/>
 					);

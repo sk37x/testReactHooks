@@ -16,6 +16,8 @@ import ForgotScreen from "./src/ForgotScreen";
 import RegisterScreen from "./src/RegisterScreen";
 import UserConfig from "./src/UserConfig";
 import AddCourt from "./src/screens/drawerAdmin/AddCourt";
+import UserList from "./src/screens/drawerAdmin/UserList";
+import UserDetail from "./src/screens/drawerAdmin/UserDetail";
 
 // import BookScreen from './src/BookScreen'
 
@@ -114,7 +116,7 @@ App = () => {
 	// });
 	const [isVisible, setVisible] = useState(false);
 
-	const isLoading = async (nav) => {
+	const isLoadingApp = async (nav) => {
 		setVisible(true);
 		setTimeout(() => {
 			setVisible(false);
@@ -137,7 +139,7 @@ App = () => {
 		const uid = user.uid;
 		const ref = await firebaseRef.child(`users/${uid}`).once("value");
 		ref.ref.set(dataUpdate);
-		await isLoading(navigation);
+		await isLoadingApp(navigation);
 		// console.log(dataUpdate);
 	};
 
@@ -172,25 +174,49 @@ App = () => {
 		imageFullPath: "",
 		name: "",
 	});
+	const defaultDataCourt = {
+		imageUri: "",
+		imageFullPath: "",
+		name: "",
+	};
 	const [isErr, setErr] = useState(undefined);
 
-	const updateType = async (refChild, dataUpdate, navigation) => {
+	const updateTypeApp = async (
+		refChild,
+		dataUpdate,
+		navigation,
+		index = ""
+	) => {
 		console.log(refChild, " ----- ", dataUpdate);
 		const ref = await firebaseRef.child(refChild).once("value");
-		const findId = await firebaseRef
-			.child(`countId/${refChild.split("/")[0]}Id`)
-			.once("value");
-		const _id = findId.val();
 
-		let obj = { _id: _id };
-		const newObj = Object.assign(obj, dataUpdate);
+		var findId = undefined;
+		var _id = undefined;
+		var obj = undefined;
+		var newObj = undefined;
+		if (index.length === 0) {
+			findId = await firebaseRef
+				.child(`countId/${refChild.split("/")[0]}Id`)
+				.once("value");
+			_id = findId.val();
+			obj = { _id: _id };
+			newObj = Object.assign(obj, dataUpdate);
+		} else {
+			newObj = dataUpdate;
+			delete newObj.index;
+		}
+
 		if (ref.val()) {
 			if (dataUpdate.name.length === 0) {
 				alert("กรุณากรอกชื่อสนาม");
 				return false;
 			} else {
-				ref.child(ref.val().length + "/").ref.set(newObj);
-				findId.ref.set(_id + 1);
+				if (index.length === 0) {
+					ref.child(ref.val().length + "/").ref.set(newObj);
+				} else {
+					ref.child(index).ref.set(newObj);
+				}
+				if (findId) findId.ref.set(_id + 1);
 			}
 		} else {
 			// for(const property in isDataCourt) {
@@ -202,16 +228,27 @@ App = () => {
 				return false;
 			} else {
 				ref.child("0/").ref.set(newObj);
-				findId.ref.set(_id + 1);
+				if (findId) findId.ref.set(_id + 1);
 			}
 		}
-		await isLoading(navigation);
+
+		let setData = {};
+		let clearData = () => {
+			for (const property in isDataCourt) {
+				setData[property] = "";
+			}
+		};
+		clearData();
+		setStateApp(setDataCourt, setData);
+		console.log(isDataCourt);
+		navigation.goBack();
+		// await isLoadingApp(navigation);
 	};
-	const setState = (funcSet, value = undefined) => {
-		console.log("########  in App Component Function setState #####");
-		console.log(value);
-		console.log(typeof value);
-		console.log("########  in App Component Function setState #####");
+	const setStateApp = (funcSet, value = undefined) => {
+		// console.log('##### in setStateApp')
+		// console.log(value);
+		// console.log(typeof value, " : typeof value");
+		// console.log('##### in setStateApp')
 		if (value) {
 			if (typeof value === "text") {
 				funcSet((state) => value);
@@ -219,7 +256,6 @@ App = () => {
 			if (typeof value === "object") {
 				funcSet((state) => {
 					let newObj = Object.assign(state, value);
-					console.log(newObj);
 					return newObj;
 				});
 			}
@@ -299,17 +335,18 @@ App = () => {
 										.then((snapshot) => {
 											let obj = snapshot.val();
 											toSetUserDetail(obj);
-											navigation.push("userconfig", { userData: obj });
+
+											navigation.navigate("userconfig", { userData: obj });
 										})
 										.catch((err) => {
 											console.log("err | " + err);
 										});
 								}}
-								style={Platform.select({
-									ios: [{ color: "white", marginRight: 10 }],
-									android: [{ paddingRight: 50 }],
+								containerStyle={Platform.select({
+									ios: [{ marginRight: 10 }],
+									android: [{ paddingRight: 10 }],
 								})}
-								size={24}
+								size={28}
 								name={"account-circle"}
 							/>
 						),
@@ -378,7 +415,7 @@ App = () => {
 										name={"plus"}
 										type={"font-awesome"}
 										initialParams={{ setTitle: setTitle }}
-										onPress={() => navigation.push("addCourt")}
+										onPress={() => navigation.navigate("addCourt")}
 									/>
 								) : (
 									<View />
@@ -395,7 +432,7 @@ App = () => {
 					children={() => (
 						<AddCourt
 							funcSetState={setDataCourt}
-							funcSet={setState}
+							funcSet={setStateApp}
 							data={isDataCourt}
 							componentLoad={ProgressLoad}
 						/>
@@ -411,9 +448,28 @@ App = () => {
 							<Text style={styles.title2}>เพิ่มสนาม</Text>
 						),
 						headerRight: () => {
-							return route.params ? (
+							let obj = route.params
+								? JSON.parse(route.params.obj)
+								: defaultDataCourt;
+
+							setStateApp(setDataCourt, obj);
+							if (!route.params) {
+								// console.log(isDataCourt, "######TEST")
+								// if(isDataCourt.index) {
+								setDataCourt((state) => {
+									console.log(state);
+									delete state.index;
+									return state;
+								});
+								// console.log('##### TEST')
+								// }
+							}
+							// console.log(isDataCourt, " ### dataCourt ### ");
+							return !route.params ? (
 								<TouchableOpacity
-									onPress={() => updateType("court/", isDataCourt, navigation)}
+									onPress={() =>
+										updateTypeApp("court/", isDataCourt, navigation)
+									}
 									style={{
 										backgroundColor: "#6a097d",
 										borderRadius: 20,
@@ -434,7 +490,14 @@ App = () => {
 								</TouchableOpacity>
 							) : (
 								<TouchableOpacity
-									onPress={() => updateType("court/", isDataCourt, navigation)}
+									onPress={() =>
+										updateTypeApp(
+											`court/`,
+											isDataCourt,
+											navigation,
+											route.params.index
+										)
+									}
 									style={{
 										backgroundColor: "#6a097d",
 										borderRadius: 20,
@@ -456,6 +519,13 @@ App = () => {
 							);
 						},
 					})}
+				/>
+				<Stack.Screen
+					name="userDetail"
+					children={() => <UserDetail />}
+					options={{
+						title: <Text style={{fontFamily:'thSarabunNew', fontSize: 26}}>ข้อมูลผู้ใช้งาน</Text>,
+					}}
 				/>
 				{/* Stack Courd */}
 
@@ -495,13 +565,13 @@ App = () => {
 						title: <Text style={styles.title2}>{route.params.name}</Text>,
 					})}
 				/>
-				<Stack.Screen
+				{/* <Stack.Screen
 					name="Test"
 					component={Dropdown}
 					options={({ navigation, route }) => ({
 						title: "Badminton K6",
 					})}
-				/>
+				/> */}
 
 				<Stack.Screen name="Bottom Tabs" component={createBottomTabs} />
 				<Stack.Screen name="Top Tabs" component={createTopTabs} />
@@ -620,7 +690,7 @@ App = () => {
 				/>
 				<Drawer.Screen
 					name="BookBadminton"
-					children={BookBadminton}
+					children={() => <BookBadminton />}
 					options={{ title: "จองสนาม" }}
 					initialParams={{ ...props.route.params }}
 				/>

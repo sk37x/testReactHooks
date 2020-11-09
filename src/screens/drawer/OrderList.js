@@ -34,30 +34,63 @@ OrderDetail = () => {
 			return state;
 		});
 
+	const findOrder = async () => {
+		var newArray = [];
+		let orderRef = await firebaseRef
+			.child("mybooks/" + user.uid)
+			.orderByChild("orderTimeSel")
+			.once("value");
+
+		let orderArray = orderRef.val();
+
+		let courtRef = await firebaseRef.child("court/").once("value");
+		let courtArray = courtRef.val();
+		var arr = [];
+		// console.log(orderArray);
+		if (orderArray) {
+			await orderArray.map((val, index) => {
+				let courtObj = courtArray.find(({ _id }) => _id === val.orderCourtId);
+				val.courtName = courtObj.name;
+				val.index = index;
+				val.imageUri = courtObj.imageUri;
+				let date = new Date();
+				let orderTimeSel = new Date(val.orderTimeSel);
+				if (date.getTime() < orderTimeSel.getTime()) {
+					arr.push(val);
+				}
+			});
+			if(arr.length > 0) {
+				toSetData(arr);
+			}
+		}
+
+		// firebaseRef
+		// 	.child("mybooks/" + user.uid)
+		// 	.orderByChild("orderTimeSel")
+		// 	.once("value")
+		// 	.then((snapshot) => {
+		// 		const date = new Date();
+		// 		var arr = [];
+		// 		snapshot.val().map((v, i) => {
+		// 			let valDate = new Date(v.orderTimeSel);
+		// 			if (valDate >= date) {
+		// 				v.key = i;
+		// 				arr.push(v);
+		// 			}
+		// 		});
+		// 		// console.log()
+		// 		toSetData(arr);
+		// });
+	};
 	useEffect(() => {
 		// fetch("https://jsonplaceholder.typicode.com/todos/1")
 		// 	.then((response) => response.json())
 		// 	.then((json) => toSetData(json));
-
-		firebaseRef
-			.child("mybooks/" + user.uid)
-			.orderByChild("orderTimeSel")
-			.once("value")
-			.then((snapshot) => {
-				const date = new Date();
-				var arr = [];
-				snapshot.val().map((v, i) => {
-					let valDate = new Date(v.orderTimeSel);
-					if (valDate >= date) {
-						v.key = i;
-						arr.push(v);
-					}
-				});
-				// console.log()
-				toSetData(arr);
-			});
-
-		return () => firebaseRef.off();
+		findOrder();
+		return () => {
+			findOrder();
+			firebaseRef.off();
+		};
 	}, [isFocused]);
 
 	const timer = [
@@ -107,7 +140,8 @@ OrderDetail = () => {
 		"ธันวาคม",
 	];
 	const showListOrder = (jsonList) => {
-		return (
+		console.log(jsonList)
+		return jsonList ? (
 			<FlatList
 				ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
 				contentContainerStyle={styleView.scrollContentContainer}
@@ -126,7 +160,8 @@ OrderDetail = () => {
 							onPress={() =>
 								navigation.navigate("orderReport", {
 									name: "รายละเอียดการจองสนาม",
-									index: item.key,
+									index: item.index,
+									orderData: JSON.stringify(item),
 								})
 							}
 						>
@@ -139,7 +174,7 @@ OrderDetail = () => {
 										fontWeight: "bold",
 									}}
 								>
-									{`สนามที่ ${item.orderFieldId}`}
+									{`สนาม ${item.courtName}`}
 								</ListItem.Title>
 								<ListItem.Subtitle
 									style={{
@@ -161,13 +196,19 @@ OrderDetail = () => {
 					);
 				}}
 			/>
+		) : (
+			<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+				<Text style={styles.title}>ไม่มีข้อมูล</Text>
+			</View>
 		);
 	};
 	return (
-		<SafeAreaView style={Platform.select({
-			ios:styles.containerNotCenterIOS,
-			android:styles.containerNotCenter
-		})}>
+		<SafeAreaView
+			style={Platform.select({
+				ios: styles.containerNotCenterIOS,
+				android: styles.containerNotCenter,
+			})}
+		>
 			{showListOrder(data)}
 		</SafeAreaView>
 	);

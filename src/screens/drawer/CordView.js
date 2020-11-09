@@ -30,6 +30,8 @@ CordView = () => {
 	useEffect(() => {
 		// console.log(route.params.timeArr);
 	}, [isFocused]);
+	/*
+	
 	const DATA = [
 		{
 			value: 0,
@@ -69,6 +71,39 @@ CordView = () => {
 		},
 	];
 
+	*/
+	const DATA =  [
+		{
+			value: 1,
+			label: "16.00 - 17.00 น.",
+			booking: false,
+		},
+		{
+			value: 2,
+			label: "17.00 - 18.00 น.",
+			booking: false,
+		},
+		{
+			value: 3,
+			label: "18.00 - 19.00 น.",
+			booking: false,
+		},
+		{
+			value: 4,
+			label: "19.00 - 20.00 น.",
+			booking: false,
+		},
+		{
+			value: 5,
+			label: "20.00 - 21.00 น.",
+			booking: false,
+		},
+		{
+			value: 6,
+			label: "21.00 - 22.00 น.",
+			booking: false,
+		},
+	]
 	const Item = ({ item, onPress, style }) => (
 		<View>
 			{item.booking.toString() == "false" ? (
@@ -117,7 +152,17 @@ CordView = () => {
 	const renderItem = ({ item }) => {
 		const backgroundColor = item.value == 1 ? "white" : "";
 		return item.value == 1 ? (
-			<ItemText item={item} style={{ backgroundColor }} />
+			<>
+				<ItemText item={item} style={{ backgroundColor }} />
+				<Item
+				item={item}
+				style={[
+					item.booking.toString() == "false"
+						? styleList.colorSuccess
+						: styleList.colorDark,
+				]}
+			/>
+			</>
 		) : (
 			<Item
 				item={item}

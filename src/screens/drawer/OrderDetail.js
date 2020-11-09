@@ -12,7 +12,12 @@ import {
 	Platform,
 	ScrollView,
 } from "react-native";
-import { useNavigation, useRoute, useNavigationState, DrawerActions } from "@react-navigation/native";
+import {
+	useNavigation,
+	useRoute,
+	useNavigationState,
+	DrawerActions,
+} from "@react-navigation/native";
 import { styles } from "../../css/style";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import RNPickerSelect, { defaultStyles } from "react-native-picker-select";
@@ -20,12 +25,8 @@ import Dropdown from "../../Dropdown";
 import ProgressLoader from "rn-progress-loader";
 import { Icon } from "react-native-elements";
 import ViewContent from "../../ViewContent";
-import firebase from 'firebase'
+import firebase from "firebase";
 // import Dropdown from '../../Dropdown'
-
-
-
-
 
 OrderDetail = () => {
 	const [selectedId, setSelectedId] = useState(null);
@@ -44,7 +45,7 @@ OrderDetail = () => {
 		{ c: "test2", test: 2 },
 	]);
 	const [total, setTotal] = useState(0);
-	const [dataState, setDataState] = useState(null)
+	const [dataState, setDataState] = useState(null);
 	const [isCountItem, setCountItem] = useState([
 		{ id: 1, count: 0 },
 		{ id: 2, count: 0 },
@@ -53,8 +54,7 @@ OrderDetail = () => {
 		{ id: 5, count: 0 },
 	]);
 
-
-	const user = firebase.auth().currentUser
+	const user = firebase.auth().currentUser;
 	const itemShow = [
 		{ id: 1, name: "น้ำเปล่าขวดใหญ่", price: "20" },
 		{ id: 2, name: "Sponsor", price: "15" },
@@ -63,17 +63,22 @@ OrderDetail = () => {
 		{ id: 5, name: "Sprite", price: "20" },
 	];
 
-
-	const insertOrder = (orderLength, fieldId, timeId, itemResult, timeSel) => {
+	const insertOrder = async (
+		orderLength,
+		fieldId,
+		timeId,
+		itemResult,
+		timeSel
+	) => {
 		let obj = {};
 		obj.orderBy = user.uid;
 		obj.orderByName = user.displayName;
 		obj.orderId = orderLength;
-		obj.orderTimeSel = timeSel
+		obj.orderTimeSel = timeSel;
 		obj.orderTime = new Date().toString();
-		obj.orderFieldId = fieldId;
+		obj.orderCourtId = fieldId;
 		obj.orderFieldTime = timeId;
-		obj.itemOrder = [...itemResult]
+		obj.itemOrder = [...itemResult];
 		return obj;
 	};
 	const insertDatetime = (date) => {
@@ -118,24 +123,26 @@ OrderDetail = () => {
 		return fieldBook;
 	};
 
-	const toSetState = (newArr) => setDataState(state => [...state, ...newArr])
+	const toSetState = (newArr) => setDataState((state) => [...state, ...newArr]);
 
 	const isLoading = () => {
 		setVisible(true);
 		setTimeout(() => {
 			setVisible(false);
 		}, 5000);
-	}
-	
+	};
+
 	const findMyOrder = (uid) => {
-		firebase.database().ref("mybooks/" + uid)
-		.once("value")
-		.then((value) => {
-			console.log("IN FUNCTION #######")
-			toSetState(value.val())
-			console.log("IN FUNCTION #######")
-		})
-	}
+		firebase
+			.database()
+			.ref("mybooks/" + uid)
+			.once("value")
+			.then((value) => {
+				console.log("IN FUNCTION #######");
+				toSetState(value.val());
+				console.log("IN FUNCTION #######");
+			});
+	};
 
 	const testDB = () => {
 		const dataRef = firebase.database().ref();
@@ -144,82 +151,138 @@ OrderDetail = () => {
 		var mean = false;
 		var insertIndex;
 		let selTime = route.params.time;
-		let selField = route.params.cord;
+		let selField = route.params.court;
 
 		dataRef
-			.child("field/")
+			.child("court/")
 			.once("value")
 			.then((snapshot) => {
-				var arr = [...snapshot.val()];
+				var snapArr = [...snapshot.val()];
+				// let findField = snapArr.find(({ fieldId }) => fieldId == selField);
+				let findFieldIndex = snapArr.findIndex(({ _id }) => _id == selField);
+				let dataSnap = snapArr[findFieldIndex];
+				console.log(findFieldIndex);
+				console.log(dataSnap.courtBook);
+				if (!dataSnap.courtBook) {
+					console.log(snapshot.child(findFieldIndex).ref);
+					// console.log(dataSnap.courtBook.length);
+				}
 
-				let findField = arr.find(({ fieldId }) => fieldId == selField);
-				let findFieldIndex = arr.findIndex(
-					({ fieldId }) => fieldId == selField
-				);
+				if (dataSnap.courtBook) {
+					dataSnap.courtBook.map((v, i) => {
+						if (
+							v.date == date.getDate() &&
+							v.month == date.getMonth() &&
+							v.year == date.getFullYear()
+						) {
+							mean = true;
+							// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+ i));
+							let timer = v.timer;
+							timer.map((val, index) => {
+								if (val.value == selTime) {
+									// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
 
-				findField.fieldBook.map((v, i) => {
-					if (
-						v.date == date.getDate() &&
-						v.month == date.getMonth() &&
-						v.year == date.getFullYear()
-					) {
-						mean = true;
-						// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+ i));
-						let timer = v.timer;
-						timer.map((val, index) => {
-							if (val.value == selTime) {
-								// console.log(snapshot.ref.child('books/'+i+'/timer/'+index).set({booking:true}));
+									let obj = val;
+									obj.booking = true;
+									console.log(
+										snapshot.ref.child(
+											findFieldIndex + "/courtBook/" + i + "/timer/" + index
+										)
+									);
+									snapshot.ref
+										.child(
+											findFieldIndex + "/courtBook/" + i + "/timer/" + index
+										)
+										.set(obj);
+									dataRef.ref
+										.child("Order/")
+										.once("value")
+										.then(async (childVal) => {
+											let orderId = await childVal.ref.parent
+												.child("countId/orderId")
+												.once("value");
+											let orderIdW = orderId.val();
+											let prepareData = await insertOrder(
+												orderIdW,
+												dataSnap._id,
+												val.value,
+												isItemResult,
+												date.toString()
+											);
+											orderId.ref.set(parseInt(orderIdW) + 1);
 
-								let obj = val;
-								obj.booking = true;
-								snapshot.ref
-									.child(findFieldIndex + "/fieldBook/" + i + "/timer/" + index)
-									.set(obj);
-								dataRef.ref
-									.child("Order/")
-									.once("value")
-									.then((childVal) => {
-										let prepareData = insertOrder(
-											childVal.val().length,
-											findField.fieldId,
-											val.value,
-											isItemResult,
-											date.toString()
-										);
-										// childVal.ref.child(childVal.val().length).set(prepareData)
-										childVal.ref.parent
-											.child("mybooks/" + user.uid)
-											.once("value")
-											.then((bookData) => {
-												console.log(bookData.val());
-												if (!bookData.val()) {
-													bookData.ref.child(0).set(prepareData);
-												} else {
-													bookData.ref
-														.child(bookData.val().length)
-														.set(prepareData);
-												}
-											});
-									});
+											// childVal.ref.child(childVal.val().length).set(prepareData)
+											childVal.ref.parent
+												.child("mybooks/" + user.uid)
+												.once("value")
+												.then((bookData) => {
+													// console.log(bookData.val());
+													if (!bookData.val()) {
+														bookData.ref.child(0).set(prepareData);
+													} else {
+														bookData.ref
+															.child(bookData.val().length)
+															.set(prepareData);
+													}
+												});
+										});
 
-								// dataRef.child('mybooks/' + user.uid).set()
-							}
-						});
-					} else {
-						// insertDatetime()
-						// console.log(snapshot.ref.child(findFieldIndex + "/fieldBook/" + i));
-					}
-				});
+									/*
+										
+									dataRef.ref
+										.child("Order/")
+										.once("value")
+										.then((childVal) => {
+											let prepareData = insertOrder(
+												childVal.val().length,
+												findField.fieldId,
+												val.value,
+												isItemResult,
+												date.toString()
+											);
+											// childVal.ref.child(childVal.val().length).set(prepareData)
+											childVal.ref.parent
+												.child("mybooks/" + user.uid)
+												.once("value")
+												.then((bookData) => {
+													console.log(bookData.val());
+													if (!bookData.val()) {
+														bookData.ref.child(0).set(prepareData);
+													} else {
+														bookData.ref
+															.child(bookData.val().length)
+															.set(prepareData);
+													}
+												});
+										});
+										
+
+										*/
+									// dataRef.child('mybooks/' + user.uid).set()
+								}
+							});
+						} else {
+							// insertDatetime()
+							// console.log(snapshot.ref.child(findFieldIndex + "/fieldBook/" + i));
+						}
+					});
+				}
 				// console.log(snapshot.ref.child(findFieldIndex+"/fieldBook/"+))
 
 				if (!mean) {
+					let checkDateLength = dataSnap.courtBook
+						? dataSnap.courtBook.length
+						: 0;
 					console.log("!mean");
 					let childRef = snapshot.ref.child(
-						findFieldIndex + "/fieldBook/" + findField.fieldBook.length
+						findFieldIndex + "/courtBook/" + checkDateLength
 					);
-					let pathSave =
-						findFieldIndex + "/fieldBook/" + findField.fieldBook.length;
+					console.log(childRef);
+
+					let pathSave = findFieldIndex + "/courtBook/" + checkDateLength;
 					childRef.set(insertDatetime(date));
+					console.log(pathSave);
+
 					childRef.once("value").then((snap2) => {
 						let timer = snap2.val().timer;
 						timer.map((val, index) => {
@@ -232,14 +295,22 @@ OrderDetail = () => {
 								dataRef.ref
 									.child("Order/")
 									.once("value")
-									.then((childVal) => {
-										let prepareData = insertOrder(
-											childVal.val().length,
-											findField.fieldId,
+									.then(async (childVal) => {
+										console.log(childVal.val());
+
+										let orderId = await childVal.ref.parent
+											.child("countId/orderId")
+											.once("value");
+										let orderIdW = orderId.val();
+										let prepareData = await insertOrder(
+											orderIdW,
+											dataSnap._id,
 											val.value,
 											isItemResult,
 											date.toString()
 										);
+										orderId.ref.set(parseInt(orderIdW) + 1);
+
 										// childVal.ref.child(childVal.val().length).set(prepareData)
 										childVal.ref.parent
 											.child("mybooks/" + user.uid)
@@ -258,10 +329,9 @@ OrderDetail = () => {
 							}
 						});
 					});
-
 				}
 			});
-
+		// return false;
 		// dataRef
 		// 	.child("books")
 		// 	.once("value")
@@ -294,11 +364,10 @@ OrderDetail = () => {
 		// 		}
 		// 	});
 		// findMyOrder(user.uid)
-		console.log(this)
 		isLoading();
 		setTimeout(() => {
-			navigation.navigate('ListBook')
-		}, 5500)
+			navigation.navigate("ListBook");
+		}, 5500);
 	};
 
 	const addOrRemove = (action, val) => {
@@ -395,7 +464,6 @@ OrderDetail = () => {
 		{ name: "รวม", price: "150" },
 	]);
 
-
 	const showDatePicker = () => {
 		setDatePickerVisibility(true);
 	};
@@ -443,7 +511,7 @@ OrderDetail = () => {
 		/>
 	);
 	useEffect(() => {
-		console.log(route.params)
+		console.log(route.params);
 	}, []);
 
 	return (
@@ -460,9 +528,7 @@ OrderDetail = () => {
 					itemShow={itemShow}
 					isCountItem={isCountItem}
 					// handlerMount={addTestCount}
-					/>
-
-
+				/>
 
 				<Text></Text>
 				<ViewContent
@@ -528,7 +594,7 @@ const styleView = StyleSheet.create({
 	},
 	textStyle: {
 		textAlign: "center",
-		fontFamily: 'thSarabunNew',
+		fontFamily: "thSarabunNew",
 		color: "#fff",
 		fontSize: 22,
 		padding: 7,

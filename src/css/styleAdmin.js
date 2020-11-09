@@ -34,6 +34,11 @@ export const styles = StyleSheet.create({
 		fontFamily: "thSarabunNew",
 		fontSize: 28,
 	},
+	paragraph: {
+		fontFamily: "thSarabunNew",
+		fontSize: 22,
+		marginLeft:18
+	},
 	scrollContentContainer: {
 		paddingTop: 10,
 		paddingBottom: 10,

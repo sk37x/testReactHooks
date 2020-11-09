@@ -6,7 +6,7 @@ import {
 	Image,
 	StyleSheet,
 	FlatList,
-	Dimensions
+	Dimensions,
 } from "react-native";
 import {
 	useNavigation,
@@ -17,8 +17,7 @@ import { styles } from "../../css/styleAdmin";
 import firebase from "firebase";
 import * as Progress from "react-native-progress";
 import TouchableScale from "react-native-touchable-scale";
-import { ListItem } from "react-native-elements";
-
+import { ListItem, Icon } from "react-native-elements";
 
 ShowListComponent = (props) => {
 	const navigation = useNavigation();
@@ -28,7 +27,7 @@ ShowListComponent = (props) => {
 	const storage = firebase.storage();
 	const [isDataList, setDataList] = useState(null);
 	const [isNumber, setNumber] = useState(0);
-	const toSetData = (dataList) => {
+	const toSetDataList = (dataList) => {
 		setDataList((state) => {
 			state = dataList;
 			return state;
@@ -37,46 +36,117 @@ ShowListComponent = (props) => {
 	useEffect(() => {
 		// console.log(route.params.type);
 		// props.isLoading();
-		firebaseRef
-			.child(route.params.type + "/")
-			.once("value")
-			.then((snapshot) => {
-				if (snapshot.val() !== null) {
-					// console.log("inSnap");
-					let arr = [...snapshot.val()];
-					// console.log(arr);
-					toSetData(arr);
-				}
-			});
-	}, [isFocused]);
+		if (route.params.type === "court") {
+			firebaseRef
+				.child(route.params.type + "/")
+				.once("value")
+				.then((snapshot) => {
+					if (snapshot.val() !== null) {
+						// console.log("inSnap");
+						let arr = [...snapshot.val()];
+						console.log(arr);
+						arr.map((val, index) => {
+							val.index = index;
+						});
+						// console.log(arr);
+						toSetDataList(arr);
+					}
+				});
+		} else if (route.params.type === "timer") {
+			let initialData = [
+				{
+					_id: 1,
+					label: "16.00 - 17.00 น.",
+					status: false,
+				},
+				{
+					_id: 2,
+					label: "17.00 - 18.00 น.",
+					status: false,
+				},
+				{
+					_id: 3,
+					label: "18.00 - 19.00 น.",
+					status: false,
+				},
+				{
+					_id: 4,
+					label: "19.00 - 20.00 น.",
+					status: false,
+				},
+				{
+					_id: 5,
+					label: "21.00 - 22.00 น.",
+					status: false,
+				},
+			];
+			firebaseRef
+				.child("timer")
+				.once("value")
+				.then(async (snapshot) => {
+					if (snapshot.val() === null) {
+						await snapshot.ref.set(initialData);
+						snapshot.ref.once("value").then((snap2) => {
+							console.log(snap2.val());
+						});
+						// console.log(snapshot.val());
+					} else {
+						let newObj = snapshot.val();
+						toSetDataList(newObj);
+					}
+				});
+		}
 
+		return () => {
+			firebaseRef.off();
+		};
+	}, [isFocused]);
 
 	const showListOrder = (jsonList) => {
 		return jsonList ? (
 			<FlatList
 				contentContainerStyle={styles.scrollContentContainer}
-				style={{ flex: 1, marginVertical: 20 }}
+				style={{ flex: 1, marginHorizontal: 15 }}
 				data={jsonList}
 				keyExtractor={(item, index) => {
 					return index ? index.toString() : 0;
 				}}
 				numColumns={2}
 				renderItem={({ item }) => {
+					let objStr = JSON.stringify(item);
 					return (
 						<TouchableScale
 							friction={50}
 							tension={100}
 							activeScale={0.95}
 							style={styles.item}
-							onPress={() => navigation.push('addCourt', {type : 'edit'})}
+							onPress={() =>
+								navigation.push("addCourt", {
+									type: "edit",
+									index: item.index,
+									obj: objStr,
+								})
+							}
 						>
-							<Image
-								source={{ uri: item.imageUri }}
-								style={{
-									width: (Dimensions.get("window").width / 2) - 100,
-									height: 150,
-								}}
-							/>
+							{item.imageUri ? (
+								<Image
+									source={{ uri: item.imageUri }}
+									style={{
+										width: Dimensions.get("window").width / 2 - 100,
+										height: 150,
+									}}
+								/>
+							) : (
+								<Icon
+									type={"font-awesome"}
+									name={"picture-o"}
+									onPress={() => showActionSheet()}
+									containerStyle={{
+										width: Dimensions.get("window").width / 2 - 100,
+										height: 150,
+									}}
+								/>
+							)}
 							<Text>{item.name}</Text>
 						</TouchableScale>
 					);
@@ -89,13 +159,7 @@ ShowListComponent = (props) => {
 		);
 	};
 
-	return (
-		<SafeAreaView style={[styles.containerList]}>
-			<Text style={styles.title}>สนามแบดมินตัน</Text>
-			{showListOrder(isDataList)}
-			{props.componentLoad()}
-		</SafeAreaView>
-	);
+	return <>{showListOrder(isDataList)}</>;
 };
 
 export default ShowListComponent;

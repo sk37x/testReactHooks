@@ -122,11 +122,11 @@ Feed = () => {
 					isCountItem={isCountItem}
 					// handlerMount={addTestCount}
 				/> */}
-				<Text style={styles.title2}>ข้อมูลข่าวสาร</Text>
+				{/* <Text style={styles.title2}>ข้อมูลข่าวสาร</Text>
 				<Image
 					source={require("./images/101749.jpg")}
 					style={styles.imgFullScreen}
-				/>
+				/> */}
 				<Text></Text>
 				<Text style={styles.title2}>Page Facebook</Text>
 				<TouchableHighlight onPress={() => supportURL()}>

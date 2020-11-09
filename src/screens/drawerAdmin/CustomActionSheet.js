@@ -3,21 +3,18 @@ import { View, Text } from "react-native";
 import { Icon } from "react-native-elements";
 import { ActionSheetCustom as ActionSheet } from "react-native-custom-actionsheet";
 import * as ImagePicker from "expo-image-picker";
-import firebase from 'firebase'
-
-
-
+import firebase from "firebase";
 
 CustomActionSheet = (props) => {
 	const firebaseRef = firebase.database().ref();
 	const storage = firebase.storage();
-    const firebaseStoreRef = firebase.storage().ref();
-	const [isFullPath, setFullPath] = useState('');
+	const firebaseStoreRef = firebase.storage().ref();
+	const [isFullPath, setFullPath] = useState("");
 	const user = firebase.auth().currentUser;
 
 	const CANCEL_INDEX = 0;
-    const DESTRUCTIVE_INDEX = 4;
-    const defaultOption = [
+	const DESTRUCTIVE_INDEX = 4;
+	const defaultOption = [
 		{
 			component: (
 				<Text
@@ -69,7 +66,7 @@ CustomActionSheet = (props) => {
 			height: 50,
 		},
 	];
-	const options = defaultOption
+	const options = defaultOption;
 	const title = (
 		<Text
 			style={{ color: "crimson", fontFamily: "thSarabunNew", fontSize: 28 }}
@@ -78,10 +75,11 @@ CustomActionSheet = (props) => {
 		</Text>
 	);
 	const getActionSheetRef = (ref) => {
-        // console.log(ref)
-        return (actionSheet = ref)};
+		// console.log(ref)
+		return (actionSheet = ref);
+	};
 
-        // const actionSheet = useRef(null);
+	// const actionSheet = useRef(null);
 
 	const handlePress = async (index) => {
 		if (index == 0) {
@@ -94,9 +92,9 @@ CustomActionSheet = (props) => {
 			// let ts = storage.refFromURL('https://firebasestorage.googleapis.com/v0/b/authenticationtest-9a066.appspot.com/o/imageCourd%2Ftest.jpg?alt=media&token=b57b3788-0b5b-4a0c-a348-8b3fc9c808af').fullPath
 			// console.log(ts)
 			// // console.log(storage.refFromURL('https://firebasestorage.googleapis.com/v0/b/authenticationtest-9a066.appspot.com/o/imageCourd%2Ftest.jpg?alt=media&token=b57b3788-0b5b-4a0c-a348-8b3fc9c808af'))
-            // // console.log(props, ' props ');
+			// // console.log(props, ' props ');
 			// - ref
-            
+
 			// pickImage("cameraroll");
 		}
 	};
@@ -105,27 +103,30 @@ CustomActionSheet = (props) => {
 		if (imageUri) {
 			const response = await fetch(imageUri);
 			const blob = await response.blob();
-			
+
 			var mongoObjectId = function () {
-				var timestamp = (new Date().getTime() / 1000 | 0).toString(16);
-				return timestamp + 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, function() {
-					return (Math.random() * 16 | 0).toString(16);
-				}).toLowerCase();
+				var timestamp = ((new Date().getTime() / 1000) | 0).toString(16);
+				return (
+					timestamp +
+					"xxxxxxxxxxxxxxxx"
+						.replace(/[x]/g, function () {
+							return ((Math.random() * 16) | 0).toString(16);
+						})
+						.toLowerCase()
+				);
 			};
 			// console.log(mongoObjectId());
-			
+
 			const fileExtension = imageUri.split(".").pop();
 			const filename = `${mongoObjectId()}.${fileExtension}`;
 
-			console.log(filename);
+			// console.log(filename);
 			var meta = {
 				contentType: "image/jpg",
 			};
 			let ref = firebaseStoreRef.child(`imageCourt/${filename}`);
 			return ref.put(blob, meta);
-			ref.getDownloadURL().then((downloadUrl) => {
-				console.log("downLoad link avaliable : " + downloadUrl);
-			});
+
 			// return ref.put(blob, meta);
 		}
 	};
@@ -145,9 +146,12 @@ CustomActionSheet = (props) => {
 					uploadImageToStore(result.uri)
 						.then((snapshot) => {
 							snapshot.ref.getDownloadURL().then((downloadUrl) => {
-								let objImage = { imageFullPath: snapshot.ref.fullPath.toString(), imageUri : downloadUrl };
+								let objImage = {
+									imageFullPath: snapshot.ref.fullPath.toString(),
+									imageUri: downloadUrl,
+								};
 								props.funcSet(props.funcSetState, objImage);
-								props.setImageUri(downloadUrl)
+								props.setImageUri(downloadUrl);
 							});
 						})
 						.catch((err) => {
@@ -172,24 +176,21 @@ CustomActionSheet = (props) => {
 				});
 
 				if (!result.cancelled) {
-					if (!result.cancelled) {
-						uploadImageToStore(result.uri)
-							.then((snapshot) => {
-								snapshot.ref.getDownloadURL().then((downloadUrl) => {
-									// console.log(downloadUrl);
-									let objImage = { imageUri: downloadUrl };
-									props.funcSet(funcSetState, downloadUrl)
-									// setImageUrl(downloadUrl);
-									// props.setUserDetail(objImage);
-								});
-							})
-							.catch((err) => {
-								console.log(err);
+					uploadImageToStore(result.uri)
+						.then((snapshot) => {
+							snapshot.ref.getDownloadURL().then((downloadUrl) => {
+								console.log("url :", downloadUrl);
+								let objImage = { imageUri: downloadUrl };
+								props.funcSet(props.funcSetState, objImage);
+								props.setImageUri(downloadUrl);
+
+								// setImageUrl(downloadUrl);
+								// props.setUserDetail(objImage);
 							});
-	
-						updateRealTimeDB(user.uid);
-					}
-	
+						})
+						.catch((err) => {
+							console.log(err);
+						});
 				}
 			} else if (checkPermission.status != "granted") {
 				alert("ไม่สามารถเข้าถึงคลังภาพได้");
