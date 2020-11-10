@@ -9,8 +9,6 @@ import {
 	View,
 } from "react-native";
 import * as Print from "expo-print";
-import * as DocumentPicker from "expo-document-picker";
-import * as Permissions from "expo-permissions";
 
 const TestPrint = () => {
 	const html = `<html>

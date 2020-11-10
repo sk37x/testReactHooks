@@ -556,7 +556,7 @@ App = () => {
 					name="orderDetail"
 					children={() => <OrderDetail />}
 					options={({ route }) => ({
-						title: route.params.name,
+						// title: route.params.name,
 					})}
 				/>
 				<Stack.Screen
@@ -684,12 +684,6 @@ App = () => {
 		return (
 			<Drawer.Navigator drawerContent={(props) => <DrawerContent {...props} />}>
 				<Drawer.Screen
-					name="TestPrint"
-					component={TestPrint}
-					// initialParams={{ ...props.route.params }}
-					options={{ title: "หน้าหลัก" }}
-				/>
-				<Drawer.Screen
 					name="Feed"
 					component={Feed}
 					initialParams={{ ...props.route.params }}
@@ -709,11 +703,6 @@ App = () => {
 				/>
 				<Drawer.Screen name="ตารางการใช้สนาม" component={TopTabCordView} />
 				<Drawer.Screen name="กฎเกณฑ์การใช้สนาม" component={RuleScreen} />
-				<Drawer.Screen
-					name="#### ทดสอบระบบ ####"
-					component={Detail}
-					initialParams={{ screenName: "Detail" }}
-				/>
 			</Drawer.Navigator>
 		);
 	};

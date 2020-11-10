@@ -24,15 +24,17 @@ LoadingScreen = () => {
 		let a = () => {
 			firebase.auth().onAuthStateChanged(async (user) => {
 				if (user) {
-					let findRole = await firebaseRef.child("users/" + user.uid).once("value");
-					let { role, displayName } = findRole.val();
-					if (role === "admin") {
+					let findRole = await firebaseRef
+						.child("users/" + user.uid)
+						.once("value");
+					console.log(findRole);
+					if (user.uid === "KuRtZKtUqheEoRaT6mZmBvDLt8z2") {
 						navigation.reset({
 							index: 0,
 							routes: [
 								{
 									name: "AdminFeed",
-									params: { someParam: "Admin", userName: displayName },
+									params: { someParam: "Admin" },
 								},
 							],
 						});

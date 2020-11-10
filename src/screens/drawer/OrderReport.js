@@ -9,6 +9,7 @@ import {
 	SafeAreaView,
 	Image,
 } from "react-native";
+import * as Print from "expo-print";
 import { styles } from "../../css/style";
 import {
 	useNavigation,
@@ -20,6 +21,7 @@ import firebase from "firebase";
 import { ListItem, Avatar, Overlay } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale"; // https://github.com/kohver/react-native-touchable-scale
 import ButtonFixedBottom from "./ButtonFixedBottom"; // https://github.com/kohver/react-native-touchable-scale
+import ButtonFixedBottomPrint from "./ButtonFixedBottomPrint"; // https://github.com/kohver/react-native-touchable-scale
 import Modal from "modal-react-native-web";
 import OverlayScreen from "./OverlayScreen";
 import ProgressLoader from "rn-progress-loader";
@@ -32,6 +34,7 @@ OrderReport = () => {
 	const user = firebase.auth().currentUser;
 	const [data, setData] = useState(null);
 	const [isOrderData, setOrderData] = useState(null);
+	const [isHTML, setHTML] = useState("");
 	// const orderData = route.params.orderData
 	// 	? JSON.parse(route.params.orderData)
 	// 	: {};
@@ -201,21 +204,60 @@ OrderReport = () => {
 		// 		setData(json);
 		// 	}
 		// }
-
 		let json = JSON.parse(route.params.orderData);
+
+		let a = json.itemOrder.map((val, index) => {
+			let dataShow = val.id ? itemShow.find(({ id }) => id == val.id) : '';
+			// console.log(dataShow);
+			// console.log(val);
+			return `
+				<tr>
+					<td style="font-size:18pt;margin-left: 20pt" >${val.name ? val.name  : dataShow.name + " / จำนวน " + val.count}</td>
+					<td style="font-size:18pt">${val.price}.- ฿</td>
+				</tr>
+			`;
+		});
+		// console.log(a);
+		setHTML(`<html>
+		<head>
+			<link rel='stylesheet' type='text/css' src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css' />
+		</head>
+		<body>
+			<div style='text-align:center'>
+				<h1>Badminton K6</h1>
+			</div>
+			<div style='text-align:center'>
+				<h1>รายการจอง</h1>
+				<hr />
+			</div>
+			<table width="100%" border="0" cellpadding='2' cellspacing='1'>
+				<tbody>
+					<tr colspan='2' style="font-size:18pt">
+						<td>รายการจอง</td>
+					</tr>
+					${a.toString()}
+					
+				</tbody>
+			
+			</table>
+		</body>
+	</html>
+		`);
+
 		setData(json);
-		console.log("test")
+		console.log("test");
 		return () => {
 			// OrderList;
 			// toSetData(null);
 			setData(null);
-			firebaseRef.off()
+			firebaseRef.off();
 		};
 	}, [isFocused]);
 
 	const itemRender = (jsonData) => {
 		// console.log(jsonData);
 		const dateSuccessOrder = jsonData ? new Date(jsonData.orderTime) : "";
+
 		return jsonData ? (
 			<View>
 				<Image
@@ -239,10 +281,12 @@ OrderReport = () => {
 					)}
 					{showListComponent(
 						"เวลาที่ทำรายการ",
-						(dateSuccessOrder.getHours().toString().length == 1 ? '0' : '') + 
-						dateSuccessOrder.getHours() +
+						(dateSuccessOrder.getHours().toString().length == 1 ? "0" : "") +
+							dateSuccessOrder.getHours() +
 							" : " +
-							(dateSuccessOrder.getMinutes().toString().length == 1 ? '0' : '') +
+							(dateSuccessOrder.getMinutes().toString().length == 1
+								? "0"
+								: "") +
 							dateSuccessOrder.getMinutes() +
 							" น."
 					)}
@@ -353,9 +397,18 @@ OrderReport = () => {
 
 		isLoading();
 		setTimeout(() => {
-			navigation.navigate('orderDetail');
+			navigation.goBack();
 		}, 3500);
 		return firebaseRef;
+	};
+
+	const printTest = async (html) => {
+		const test = await Print.printAsync({
+			html: html,
+			width: 25,
+			height: 55,
+		});
+		// console.log(test);
 	};
 
 	const isLoading = () => {
@@ -390,12 +443,17 @@ OrderReport = () => {
 						borderColor={"#f5c6cb"}
 						onPress={() => {
 							findAndDeleteData();
-
 						}}
 						text="ยกเลิกรายการ"
 					/>
 				) : (
-					<View />
+					<ButtonFixedBottomPrint
+						color={"#721c24"}
+						backgroundcolor={"#f8d7da"}
+						borderColor={"#f5c6cb"}
+						onPress={() => printTest(isHTML)}
+						text="พิม"
+					/>
 				)
 			) : (
 				<ButtonFixedBottom

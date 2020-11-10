@@ -62,13 +62,11 @@ AddCourt = (props) => {
 	};
 	deleteDBCourt = async () => {
 		let courtArr = await firebaseRef.child("court/").once("value");
-		let list = courtArr.val();
-		let indexDelete = courtArr
-			.val()
-			.findIndex(({ _id }) => _id == props.data._id);
-		console.log(list.length);
-		list.splice(indexDelete, indexDelete);
-		console.log(list.length);
+		let objKey = Object.keys(courtArr.val())
+		let list = Object.values(courtArr.val());
+		// let indexDelete = list.findIndex(({ _id }) => _id == props.data._id);
+		courtArr.child(route.params.index).ref.remove();
+		isLoading(navigation)
 	};
 
 	// const { imageUri, name } = props.data;

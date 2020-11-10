@@ -45,8 +45,7 @@ ShowListComponent = (props) => {
 					.then((snapshot) => {
 						if (snapshot.val() !== null) {
 							// console.log("inSnap");
-							let arr = [...snapshot.val()];
-							console.log(arr);
+							let arr = Object.values(snapshot.val());
 							arr.map((val, index) => {
 								val.index = index;
 							});
@@ -124,7 +123,7 @@ ShowListComponent = (props) => {
 							activeScale={0.95}
 							style={styles.item}
 							onPress={() =>
-								navigation.push("addCourt", {
+								navigation.navigate("addCourt", {
 									type: "edit",
 									index: item.index,
 									obj: objStr,

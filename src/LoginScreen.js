@@ -23,7 +23,6 @@ class LoginScreen2 extends React.Component {
 
 	checkUserPass = (username, password) => {
 		try {
-			console.log("HelloWorld");
 			firebase
 				.auth()
 				.signInWithEmailAndPassword(username, password)
