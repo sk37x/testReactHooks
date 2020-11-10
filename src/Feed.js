@@ -23,7 +23,11 @@ import axios from "axios";
 import { Icon } from "react-native-elements";
 import ViewContent from "./ViewContent";
 import { set } from "react-native-reanimated";
-import RNHTMLtoPDF from 'react-native-html-to-pdf'
+// Import HTML to PDF
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+// Import RNPrint
+import RNPrint from 'react-native-print';
+
 // clear Timeout Android
 const _setTimeout = global.setTimeout;
 const _clearTimeout = global.clearTimeout;

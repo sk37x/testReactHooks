@@ -95,7 +95,8 @@ RegisterScreen = () => {
 		var obj = {
 			displayName: name,
 			uid: user.user.uid,
-			email:email
+			email:email,
+			role: 'user',
 		}
 		ref.set(obj)
 	}

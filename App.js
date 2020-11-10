@@ -29,6 +29,7 @@ import Tab3 from "./src/screens/tabs/Tab3";
 
 import Detail from "./src/Detail.js";
 import Feed from "./src/Feed";
+import TestPrint from "./src/TestPrint";
 import Splash from "./src/Splash";
 import LoginScreen from "./src/LoginScreen";
 import LoadingScreen from "./src/LoadingScreen";
@@ -682,6 +683,12 @@ App = () => {
 	const createDrawer = (props) => {
 		return (
 			<Drawer.Navigator drawerContent={(props) => <DrawerContent {...props} />}>
+				<Drawer.Screen
+					name="TestPrint"
+					component={TestPrint}
+					// initialParams={{ ...props.route.params }}
+					options={{ title: "หน้าหลัก" }}
+				/>
 				<Drawer.Screen
 					name="Feed"
 					component={Feed}
