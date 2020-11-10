@@ -62,11 +62,20 @@ AddCourt = (props) => {
 	};
 	deleteDBCourt = async () => {
 		let courtArr = await firebaseRef.child("court/").once("value");
-		let objKey = Object.keys(courtArr.val())
-		let list = Object.values(courtArr.val());
-		// let indexDelete = list.findIndex(({ _id }) => _id == props.data._id);
-		courtArr.child(route.params.index).ref.remove();
-		isLoading(navigation)
+		let indexDelete = courtArr
+			.val()
+			.findIndex(({ _id }) => _id == props.data._id);
+		let ref = courtArr.child(indexDelete).ref;
+		ref
+			.remove()
+			.then((value) => {
+				console.log(value);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+
+			isLoading(navigation)
 	};
 
 	// const { imageUri, name } = props.data;
@@ -131,7 +140,6 @@ AddCourt = (props) => {
 					borderColor={"#f5c6cb"}
 					onPress={() => this.deleteDBCourt()}
 					text="ลบสนาม"
-					courtName={isNameCourt ? isNameCourt : ""}
 				/>
 			) : (
 				<View />

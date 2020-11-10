@@ -92,7 +92,7 @@ ShowListComponent = (props) => {
 							});
 							// console.log(snapshot.val());
 						} else {
-							let newObj = snapshot.val();
+							let newObj = Object.values(snapshot.val());;
 							toSetDataList(newObj);
 						}
 					});

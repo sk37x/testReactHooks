@@ -70,7 +70,7 @@ BookBadminton = () => {
 	const fetchData = () => {
 		let arrToSet = [];
 		firebaseRef.child('field/').on('value', (snapshot) => {
-			let snapArr = snapshot.val();
+			let snapArr = Object.values(snapshot.val());;
 			let obj = {};
 			snapArr.map((val, index) => {
 				obj.fieldId = val.fieldId;
@@ -90,7 +90,7 @@ BookBadminton = () => {
 		let a = fetchData();
 
 		firebaseRef.child('court/').once('value').then((snapshot) => {
-			let snapArr = snapshot.val();
+			let snapArr = Object.values(snapshot.val());
 			// snapArr.map((val, index) => val.key = index)
 			setDataCourt(snapArr)
 		})
@@ -109,7 +109,7 @@ BookBadminton = () => {
 	)};
 	
 	renderItem = ({ item }) => {
-		const backgroundColor = item.id === selectedId ? "white" : "white";
+		const backgroundColor = 'white'
 		// console.log(item)
 		return (
 			<Item

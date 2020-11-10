@@ -225,7 +225,7 @@ BookBadmintonDetail = () => {
 			.child("field")
 			.once("value")
 			.then((snapshot) => {
-				let snapArr = [...snapshot.val()];
+				let snapArr = Object.values(snapshot.val());
 				var toDayDate = new Date();
 				snapArr.map((val, index) => {
 					let obj = {};

@@ -271,7 +271,7 @@ UserConfig = (props) => {
 			.child("users/" + user.uid)
 			.once("value")
 			.then((snapshot) => {
-				let obj = snapshot.val();
+				let obj = Object.values(snapshot.val());;
 				toSetUserDetail(obj);
 			});
 

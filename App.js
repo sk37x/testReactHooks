@@ -245,7 +245,7 @@ App = () => {
 		navigation.goBack();
 		// await isLoadingApp(navigation);
 	};
-	const setStateApp = (funcSet, value = undefined) => {
+	const setStateApp = (funcSet, value) => {
 		// console.log('##### in setStateApp')
 		// console.log(value);
 		// console.log(typeof value, " : typeof value");
@@ -256,6 +256,7 @@ App = () => {
 			}
 			if (typeof value === "object") {
 				funcSet((state) => {
+					console.log(state, 'instate')
 					let newObj = Object.assign(state, value);
 					return newObj;
 				});
@@ -334,7 +335,7 @@ App = () => {
 										.child("users/" + user.uid)
 										.once("value")
 										.then((snapshot) => {
-											let obj = snapshot.val();
+											let obj = Object.values(snapshot.val());
 											toSetUserDetail(obj);
 
 											navigation.navigate("userconfig", { userData: obj });
@@ -449,11 +450,11 @@ App = () => {
 							<Text style={styles.title2}>เพิ่มสนาม</Text>
 						),
 						headerRight: () => {
-							let obj = route.params
-								? JSON.parse(route.params.obj)
-								: defaultDataCourt;
+							// let obj = route.params
+							// 	? JSON.parse(route.params.obj)
+							// 	: defaultDataCourt;
 
-							setStateApp(setDataCourt, obj);
+							// setStateApp(setDataCourt, obj);
 							if (!route.params) {
 								// console.log(isDataCourt, "######TEST")
 								// if(isDataCourt.index) {

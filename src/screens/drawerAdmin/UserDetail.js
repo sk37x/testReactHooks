@@ -50,7 +50,7 @@ UserDetail = (props) => {
 		let courtArr = await snapshot.ref.parent.parent
 			.child("court/")
 			.once("value");
-		let orderArr = snapshot.val();
+		let orderArr = Object.values(snapshot.val());;
 		let newArr = orderArr.map((val, index) => {
 			let findCourt = courtArr.val().find(({ _id }) => _id == val.orderCourtId);
 			if (findCourt) {
@@ -66,7 +66,7 @@ UserDetail = (props) => {
 		// .child("mybooks/" + route.params.uid)
 		// .once("value")
 		// .then((snapshot) => {
-		// 	var obj = snapshot.val();
+		// 	var obj = Object.values(snapshot.val());;
 		// 	if (obj !== null) {
 		// 		snapshot.ref.parent.parent
 		// 			.child("court/")
