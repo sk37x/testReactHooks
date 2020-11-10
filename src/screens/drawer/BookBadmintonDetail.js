@@ -169,7 +169,7 @@ BookBadmintonDetail = () => {
 					.child(refIndex + "/courtBook/")
 					.ref.once("value")
 					.then((snap2) => {
-						var snap2Arr = snap2.val();
+						var snap2Arr = Object.values(snap2.val());
 						var snap2Index = snap2Arr.findIndex(
 							({ date, month, year }) =>
 								date == date2.getDate() &&
@@ -180,7 +180,7 @@ BookBadmintonDetail = () => {
 							.child(snap2Index + "/timer/")
 							.ref.once("value")
 							.then((snap3) => {
-								let snap3Arr = snap3.val();
+								let snap3Arr = Object.values(snap3.val());
 								let timeArr = [];
 								if (snap3Arr) {
 									snap3Arr.map((val, index) => {
