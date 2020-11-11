@@ -52,7 +52,7 @@ UserDetail = (props) => {
 			.once("value");
 		let orderArr = Object.values(snapshot.val());;
 		let newArr = orderArr.map((val, index) => {
-			let findCourt = courtArr.val().find(({ _id }) => _id == val.orderCourtId);
+			let findCourt = Object.values(courtArr.val()).find(({ _id }) => _id == val.orderCourtId);
 			if (findCourt) {
 				val.courtName = findCourt.name;
 				val.imageUri = findCourt.imageUri;

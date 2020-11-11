@@ -205,18 +205,36 @@ OrderReport = () => {
 		// 	}
 		// }
 		let json = JSON.parse(route.params.orderData);
+		console.log(json, " json ");
 
+		let orderByDetail = (json) => {
+			let date = new Date(json.orderTime);
+			let dateTH =
+				date.getDate() +
+				" " +
+				monthName[date.getMonth()] +
+				" " +
+				(date.getFullYear() + 543);
+			return `				
+				<h2 align='left'>วันที่ทำรายการ - ${json.orderByName}</h2>
+				<h2 align='left'>ชื่อผู้ทำรายการ - ${dateTH}</h2>
+			`;
+		};
 		let a = json.itemOrder.map((val, index) => {
-			let dataShow = val.id ? itemShow.find(({ id }) => id == val.id) : '';
+			let dataShow = val.id ? itemShow.find(({ id }) => id == val.id) : "";
 			// console.log(dataShow);
 			// console.log(val);
 			return `
 				<tr>
-					<td style="font-size:18pt;margin-left: 20pt" >${val.name ? val.name  : dataShow.name + " / จำนวน " + val.count}</td>
-					<td style="font-size:18pt">${val.price}.- ฿</td>
+					<td style="font-size:18pt;margin-left: 20pt" >${
+						val.name ? val.name : dataShow.name + " / จำนวน " + val.count
+					}</td>
+					<td align='right' style="font-size:18pt">${val.price}.- ฿</td>
+					<td></td>
 				</tr>
 			`;
 		});
+
 		// console.log(a);
 		setHTML(`<html>
 		<head>
@@ -224,7 +242,14 @@ OrderReport = () => {
 		</head>
 		<body>
 			<div style='text-align:center'>
-				<h1>Badminton K6</h1>
+				<h1>Badminton K.6</h1>
+				<h2 align='right'>19/13 หมู่1 คลองหก จังหวัดปทุมธานี </h2>
+				<h2 align='right'>โทร. 094-6518833</h2>
+				<h2> </h2>
+				${orderByDetail(json)}
+				
+				
+				
 			</div>
 			<div style='text-align:center'>
 				<h1>รายการจอง</h1>
